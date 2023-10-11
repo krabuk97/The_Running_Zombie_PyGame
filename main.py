@@ -312,6 +312,62 @@ class Bombs(pygame.sprite.Sprite):
     bombs_group.add(explosion)
 
 
+class Menu:
+    def __init__(self, screen, menu_image):
+        self.screen = screen
+        self.menu_image = pygame.transform.scale(menu_image, (600, 480))
+        self.font = pygame.font.Font(None, 36)
+        self.start_button = pygame.Rect(200, 300, 200, 50)
+        self.exit_button = pygame.Rect(200, 360, 200, 50)
+        self.start_color = (255, 0, 0)
+        self.exit_color = (255, 0, 0)
+        self.start_text = self.font.render("Start", True, self.start_color)
+        self.exit_text = self.font.render("Exit", True, self.exit_color)
+        self.selected_button = None
+
+    def draw(self):
+        self.screen.blit(self.menu_image, (0, 0))
+        pygame.draw.rect(self.screen, self.start_color, self.start_button)
+        pygame.draw.rect(self.screen, self.exit_color, self.exit_button)
+        self.screen.blit(self.start_text, (240, 310))
+        self.screen.blit(self.exit_text, (250, 370))
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEMOTION:
+                x, y = event.pos
+                if self.start_button.collidepoint(x, y):
+                    self.selected_button = "start"
+                elif self.exit_button.collidepoint(x, y):
+                    self.selected_button = "exit"
+                else:
+                    self.selected_button = None
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if self.start_button.collidepoint(x, y):
+                    # Rozpocznij grę
+                    return "start"
+                elif self.exit_button.collidepoint(x, y):
+                    # Zakończ grę
+                    pygame.quit()
+                    sys.exit()
+        return None
+
+menu = Menu(screen, LoadImage.menu_image)
+
+while True:
+    selected_action = menu.handle_events()
+    if selected_action == "start":
+        break
+    menu.draw()
+    pygame.display.flip()
+
+
+
+
 class Gui:
 
   def __init__(self, player):
@@ -340,6 +396,7 @@ pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (600, 480))
 death_screen = pygame.transform.scale(LoadImage.death_screen, (600, 480))
 
+
 all_sprites = pygame.sprite.Group()
 
 last_bomb_spawn_time = pygame.time.get_ticks()
@@ -356,7 +413,11 @@ class GameLoop:
     self.running = True
     self.clock = pygame.time.Clock()
     self.camera_x = 0
-
+    self.death_animation_started = False
+    self.death_animation_duration = 5000
+    self.death_animation_start_time = 0
+    self.death_screen_duration = 5000
+    
     self.player = Player()
     self.gui = Gui(self.player)
 
@@ -376,14 +437,37 @@ class GameLoop:
         self.running = False
 
   def run(self):
+    game_state = "playing" 
+    
     while self.running:
       self.handle_events()
-
       keys = pygame.key.get_pressed()
-      self.player.update(keys)
 
       current_time = pygame.time.get_ticks()
 
+      if game_state == "playing":
+          if self.player.health <= 0:
+              game_state = "death_animation"
+              self.death_animation_start_time = current_time
+
+          if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
+            pass
+
+      elif game_state == "death_animation":
+          if current_time - self.death_animation_start_time >= self.death_animation_duration:
+              game_state = "death_screen"
+              self.death_screen_start_time = current_time
+
+          self.player.animate_death()
+
+      elif game_state == "death_screen":
+          if current_time - self.death_screen_start_time >= self.death_screen_duration:
+              self.running = False
+      
+      if not self.death_animation_started:
+          if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
+              pass
+      
       if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
         bomb_regular = Bombs(self.player, "regular", random.randint(0, width),
                              0)
@@ -414,18 +498,16 @@ class GameLoop:
             background1.get_width() - width))
       self.screen.blit(background1, (-self.camera_x, 0))
 
-    if self.player.health == 0 and not self.player.is_dying:
-      self.time_of_death = pygame.time.get_ticks()
-      self.player.is_dying = True
+      if self.death_animation_started:
+        
+          if current_time - self.death_animation_start_time >= self.death_animation_duration:
+              self.running = False
+              break
+      
+    
+          self.player.animate_death()
 
-    if self.player.is_dying:
-      self.player.animate_death()
-      if pygame.time.get_ticks() - self.time_of_death >= 5000:
-        screen.blit(death_screen, (0, 0))
-        pygame.display.flip()
-        if pygame.time.get_ticks() - self.time_of_death >= 8000:
-          self.running = False
-
+      
       for bomb in bombs_group:
         bomb.update(self.camera_x)
         self.screen.blit(bomb.image,
@@ -442,8 +524,12 @@ class GameLoop:
       pygame.display.flip()
       self.clock.tick(60)
 
-    pygame.quit()
-    sys.exit()
+    if not self.running:
+        self.screen.blit(death_screen, (0, 0))
+        pygame.display.flip()
+        pygame.time.delay(3000)
+        pygame.quit()
+        sys.exit()
 
 
 game_loop = GameLoop()

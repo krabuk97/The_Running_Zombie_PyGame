@@ -7,6 +7,8 @@ class LoadImage:
 
     background1 = pygame.image.load('image/background.jpg')
 
+    menu_image = pygame.image.load('image/menu_image.jpeg')
+
     playerwalk = [
         "image/Walk/w0.png",
         "image/Walk/w1.png",
