@@ -313,24 +313,22 @@ class Bombs(pygame.sprite.Sprite):
 
 
 class Menu:
-    def __init__(self, screen, menu_image):
+    def __init__(self, screen, menu_image, start_button_image, exit_button_image):
         self.screen = screen
         self.menu_image = pygame.transform.scale(menu_image, (600, 480))
-        self.font = pygame.font.Font(None, 36)
-        self.start_button = pygame.Rect(200, 300, 200, 50)
-        self.exit_button = pygame.Rect(200, 360, 200, 50)
-        self.start_color = (255, 0, 0)
-        self.exit_color = (255, 0, 0)
-        self.start_text = self.font.render("Start", True, self.start_color)
-        self.exit_text = self.font.render("Exit", True, self.exit_color)
+        self.start_button_image = pygame.transform.scale(start_button_image, (120, 130))
+        self.exit_button_image = pygame.transform.scale(exit_button_image, (120, 130))
+        self.start_button_rect = self.start_button_image.get_rect(topleft=(40, 300))
+        self.exit_button_rect = self.exit_button_image.get_rect(topright=(540, 300))
         self.selected_button = None
+        self.button_hover_scale = 1.1
+        self.start_button_scaled = self.start_button_image.copy()
+        self.exit_button_scaled = self.exit_button_image.copy()
 
     def draw(self):
         self.screen.blit(self.menu_image, (0, 0))
-        pygame.draw.rect(self.screen, self.start_color, self.start_button)
-        pygame.draw.rect(self.screen, self.exit_color, self.exit_button)
-        self.screen.blit(self.start_text, (240, 310))
-        self.screen.blit(self.exit_text, (250, 370))
+        self.screen.blit(self.start_button_scaled, self.start_button_rect.topleft)
+        self.screen.blit(self.exit_button_scaled, self.exit_button_rect.topleft)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -339,24 +337,30 @@ class Menu:
                 sys.exit()
             if event.type == pygame.MOUSEMOTION:
                 x, y = event.pos
-                if self.start_button.collidepoint(x, y):
+                if self.start_button_rect.collidepoint(x, y):
                     self.selected_button = "start"
-                elif self.exit_button.collidepoint(x, y):
+                    self.start_button_scaled = pygame.transform.scale(self.start_button_image, (
+                        int(self.start_button_image.get_width() * self.button_hover_scale),
+                        int(self.start_button_image.get_height() * self.button_hover_scale)))
+                elif self.exit_button_rect.collidepoint(x, y):
                     self.selected_button = "exit"
+                    self.exit_button_scaled = pygame.transform.scale(self.exit_button_image, (
+                        int(self.exit_button_image.get_width() * self.button_hover_scale),
+                        int(self.exit_button_image.get_height() * self.button_hover_scale)))
                 else:
                     self.selected_button = None
+                    self.start_button_scaled = self.start_button_image.copy()
+                    self.exit_button_scaled = self.exit_button_image.copy()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                if self.start_button.collidepoint(x, y):
-                    # Rozpocznij grę
+                if self.start_button_rect.collidepoint(x, y):
                     return "start"
-                elif self.exit_button.collidepoint(x, y):
-                    # Zakończ grę
+                elif self.exit_button_rect.collidepoint(x, y):
                     pygame.quit()
                     sys.exit()
         return None
 
-menu = Menu(screen, LoadImage.menu_image)
+menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 
 while True:
     selected_action = menu.handle_events()
@@ -364,9 +368,6 @@ while True:
         break
     menu.draw()
     pygame.display.flip()
-
-
-
 
 class Gui:
 

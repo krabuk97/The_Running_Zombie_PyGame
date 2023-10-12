@@ -9,6 +9,10 @@ class LoadImage:
 
     menu_image = pygame.image.load('image/menu_image.jpeg')
 
+    start_button = pygame.image.load('image/start_button.png')
+
+    exit_button = pygame.image.load('image/exit_button.png')
+
     playerwalk = [
         "image/Walk/w0.png",
         "image/Walk/w1.png",
