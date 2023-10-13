@@ -40,14 +40,14 @@ class LoadImage:
     ]
 
     playerdie = [
-        'image/Hurt/hurt (1).png',
-        'image/Hurt/hurt (8).png',
-        'image/Hurt/hurt (7).png',
-        'image/Hurt/hurt (6).png',
-        'image/Hurt/hurt (5).png',
-        'image/Hurt/hurt (4).png',
-        'image/Hurt/hurt (3).png',
-        'image/Hurt/hurt (2).png'
+        'image/Die/die (1).png',
+        'image/Die/die (2).png',
+        'image/Die/die (3).png',
+        'image/Die/die (4).png',
+        'image/Die/die (5).png',
+        'image/Die/die (6).png',
+        'image/Die/die (7).png',
+        'image/Die/die (8).png'
     ]
 
     healthbar = pygame.image.load("image/health.png")

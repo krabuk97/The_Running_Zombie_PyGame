@@ -371,24 +371,20 @@ while True:
 
 class Gui:
 
-  def __init__(self, player):
-    self.player = player
-    self.health_bar_full = player.health_bar_full
-    self.health_bar_width = self.health_bar_full.get_width()
-    self.health_bar_rect = self.health_bar_full.get_rect(topleft=(50, 50))
-
-  def draw_health_bar(self):
-    health_bar_width = int(self.player.health / 100 * self.health_bar_width)
-    self.health_bar_rect.width = max(health_bar_width, 0)
-    screen.blit(self.health_bar_full, self.health_bar_rect.topleft)
-
-    font = pygame.font.Font(None, 24)
-    health_percentage = f"{self.player.health}%"
-    text = font.render(health_percentage, True, white)
-    text_rect = text.get_rect(midleft=(self.health_bar_rect.right + 10,
-                                       self.health_bar_rect.centery))
-    screen.blit(text, text_rect)
-
+    def __init__(self, player):
+        self.player = player
+        self.health_bar_full = player.health_bar_full
+        self.health_bar_width = self.health_bar_full.get_width()
+        self.health_bar_rect = self.health_bar_full.get_rect(topleft=(50, 50))
+    
+    def calculate_health_bar_width(self):
+        return int(self.player.health / 100 * self.health_bar_width)
+  
+    def draw_health_bar(self):
+        health_bar_width = self.calculate_health_bar_width()
+        health_bar_cropped = pygame.Surface((health_bar_width, self.health_bar_rect.height))
+        health_bar_cropped.blit(self.health_bar_full, (0, 0), (0, 0, health_bar_width, self.health_bar_rect.height))
+        screen.blit(health_bar_cropped, self.health_bar_rect.topleft)
 
 player = Player()
 gui = Gui(player)
@@ -415,9 +411,9 @@ class GameLoop:
     self.clock = pygame.time.Clock()
     self.camera_x = 0
     self.death_animation_started = False
-    self.death_animation_duration = 5000
+    self.death_animation_duration = 800
     self.death_animation_start_time = 0
-    self.death_screen_duration = 5000
+    self.death_screen_duration = 1000
     
     self.player = Player()
     self.gui = Gui(self.player)
@@ -504,10 +500,8 @@ class GameLoop:
           if current_time - self.death_animation_start_time >= self.death_animation_duration:
               self.running = False
               break
-      
     
           self.player.animate_death()
-
       
       for bomb in bombs_group:
         bomb.update(self.camera_x)
