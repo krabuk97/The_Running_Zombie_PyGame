@@ -13,6 +13,8 @@ class LoadImage:
 
     exit_button = pygame.image.load('image/exit_button.png')
 
+    restart_button = pygame.image.load('image/restart_button.png')
+
     playerwalk = [
         "image/Walk/w0.png",
         "image/Walk/w1.png",
