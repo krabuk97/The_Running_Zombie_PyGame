@@ -5,7 +5,7 @@ description = ""
 authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
-python = ">=3.8.0,<3.9"
+python = ">=3.9,<3.13"
 pygame = "^2.1.2"
 dearpygui = "^1.6.2"
 
