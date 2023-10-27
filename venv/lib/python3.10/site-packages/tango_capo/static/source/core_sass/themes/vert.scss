@@ -1,0 +1,69 @@
+// Set vars as needed
+$accent: #060;
+$nav_width: 130px;
+
+
+@import '../core/vars.scss';
+
+/*$s   : $s+$nav_width;     // larger, but still single-column devices.
+$m   : $m+$nav_width;     // approximately ipad portrait.    
+$l   : $l+$nav_width;     // approximately ipad landscape or small desktop.
+$xl  : $xl+$nav_width;    // approximately 1200px-ish.
+$xxl : $xxl+$nav_width; 
+
+@import '../core/mixins.scss';
+*/
+// then import site css
+@import '../site.scss';
+@import '../layout_snippets/_vertical_navigation.scss';
+
+
+$banner_height: 320px;
+[role=banner] {
+	background-image: url(../../img/site/tango_bg.jpg);
+	background-size: cover;
+	border-bottom: 2px solid $inverse;
+	height: 80px;
+	position: relative;
+
+	@include breakpoint(m) {
+		padding-top: 260px;
+		height: $banner_height;
+	}
+
+	.nav-active & {
+		left: $nav_width;
+	}
+
+	.site-name a {
+		@include trans();
+		@include large-header();
+		color: $base;
+		font-weight: normal;
+		text-transform: uppercase;
+		text-shadow: 0 0 3px $inverse, 0 0 10px $inverse;
+
+		@include breakpoint(m) {
+			letter-spacing: 0.1em;
+		}
+
+		&:hover {
+			color: $inverse;
+			text-shadow: 0 0 3px $base, 0 0 10px $base;
+		}
+	}
+}
+
+[role=navigation] {
+	background: $inverse;
+
+	.nav-active & {
+		margin-top: -80px;
+	}
+
+	a {
+		color: $base;
+	}
+
+
+}

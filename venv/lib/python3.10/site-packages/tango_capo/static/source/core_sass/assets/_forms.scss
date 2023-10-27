@@ -1,0 +1,142 @@
+// basic form styling
+
+/* this is old...
+.boxedform {
+  background: -webkit-gradient(linear, left top, left bottom, from(rgba(0,0,0, 0)), to(rgba(0,0,0, .1)));
+  background: -moz-linear-gradient(50% 50% 270deg,rgba(0,0,0, 0), rgba(0,0,0, .1));
+  > h2 {padding:0 10px;}
+  p {border-bottom:1px dotted @accent; padding:.5em 0; margin-bottom:0; clear:left}
+  label {float:left; padding: 10px; font-size:12px; font-weight:bold; width:32%}
+  label.nofloat {float:none; width:100%}
+    input[type=text], input[type=password], textarea {width:67%; border-radius:5px; border:1px solid #444; padding:5px 10px}
+  .submithold {text-align:center;}
+  .helptext {color:@inverse_alt; font-size:80%; display:block; margin-left:33%}
+}
+*/
+
+form, fieldset, button, input, select, textarea { margin: 0; }
+fieldset, legend { padding: 0; }
+
+/* Indicate that 'label' will shift focus to the associated form element */
+label { 
+  @extend .pad-all; 
+  @extend .sub-text;
+  cursor: pointer; 
+}
+legend { white-space: normal; }
+
+/* Consistent box sizing and appearance */
+input[type="checkbox"], input[type="radio"] { padding: 0; *width: 13px; *height: 13px; }
+input[type="search"] { -webkit-appearance: textfield; }
+input[type="search"]::-webkit-search-decoration, 
+input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+// Allow only vertical resizing
+textarea { overflow: auto; vertical-align: top; resize: vertical; }
+
+/* Colors for form validity */
+input:invalid, 
+textarea:invalid { background-color: #f0dddd; }
+
+select, input, textarea { color: $inverse_alt; }
+
+
+.boxedform {
+  @include radius(.5em);
+  border: 1px solid $base_alt2;
+  margin-bottom: 1em;
+
+  > h2 {
+    padding: 0.5em 10px 0; 
+    color: $accent_alt; 
+    font-weight: bold; 
+  }
+  label {
+    color: $meta; 
+    font-weight: bold; 
+
+    &.nofloat {
+      float: none; 
+      width: 100%;
+    }
+  }
+
+  p {
+    @include pad(top-bottom);
+    border-bottom: 1px dotted $base_alt2; 
+    margin-bottom: 0; 
+    clear: left;
+
+    label {
+      float: left; 
+      width: 30%;
+    }
+    label + * { width: 68%; }
+    
+    input[type=text], input[type=password], textarea {
+      @include radius(.5em); 
+      @include pad(all);
+      border: 1px solid $base_alt2; 
+      background: $base;
+
+      &:active, &:focus {
+        color: $inverse;
+      }
+    }
+
+    &.required label {
+      @extend .sub-text;
+      color: $accent;
+    }
+  }
+  > ul {
+    clear: left;
+    margin: 0;
+    padding: 0;
+    
+    li {
+      list-style: none;
+      display: inline-block; 
+      vertical-align: top; 
+      @include breakpoint(s) { width: 32%; }
+
+      label { font-weight: normal }
+    }
+  }
+
+  .helptext {
+    @extend .small-text;
+    color: $meta; 
+    display: block; 
+    margin-left: 31%
+  }
+
+
+  &.has-fieldsets {
+    border: 0;
+    fieldset {
+      @include radius(.5em);
+      border: 1px solid $base_alt2;
+      margin-bottom: 1em;
+
+      legend {
+        padding: 0.5em 10px 0; 
+        color: $accent_alt; 
+        font-weight: bold; 
+        text-transform: uppercase
+      }
+    }
+  }
+}
+
+.submithold, p.submit {
+  text-align: center;
+  border-bottom: 0;
+}
+
+::-webkit-input-placeholder { color: $meta; }
+     :-ms-input-placeholder { color: $meta; }
+         ::-moz-placeholder { color: $meta; } // Firefox 19+ 
+
+// Note: Buttons are styled in button.scss
+

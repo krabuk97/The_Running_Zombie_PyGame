@@ -1,0 +1,114 @@
+@import '_tables.scss';      // table styles
+@import '_lists.scss';       // list styles
+@import '_grids.scss';       // gridded content
+@import '_pagination.scss';  // pagination
+@import '_tabs.scss';        // tabs content
+@import '_calendar.scss';    // calendars, dateboxes and event lists content
+@import '_forms.scss';       // basic form styling
+@import '_icons.scss';       // auto-inserted icons
+@import '_sideheads.scss';   // vertical headlines
+@import '_button.scss';      // buttons
+@import '_slideshow.scss';   // slideshows
+@import '../core/_typography.scss';
+
+hr.fancy {border:0; @include fancy_rule;}
+
+.hero { 
+  position:relative; 
+  z-index:10;
+  padding: $defaultMargin 0 0;
+}
+
+// A kicker sits above a major heading and provies as a section name, 
+// author name or other short additional information.
+.kicker {
+  margin-bottom: $thinMargin; 
+  color: $inverse_alt;
+  
+  a {color:$inverse_alt}
+  a:hover {color:$accent}
+}
+
+
+.hero .boxedform {
+  @include gradient($base_alt, 10%, $texture);
+  label, legend, h2, {padding-left: $gutter}
+  input[type=text], input[type=password], textarea {width:67%}
+}
+
+blockquote, q {
+  @extend .sub-text;
+  @extend .margin-top-bottom;
+  @include clearfix();
+
+  padding-left: $gutter;
+  color: $meta; 
+  display: block;
+
+  footer {font-style: italic;}
+  img {max-width:30% !important}
+}
+
+.entry-content {
+  @include breakpoint(l) {
+    float: left;
+    width: 620px;
+  }
+
+  @include breakpoint(xl) {
+    width: 860px;
+  }
+
+  .datebox { margin-right: $gutter; }
+
+  #top_assets { 
+
+    ul.sociallinks { margin: 0; border-bottom:0 }
+
+    @include breakpoint(s) {
+      width: 460px; 
+      float: right; 
+      margin: 0 0 $baseline $gutter; 
+    }
+
+    @include breakpoint(m) {
+      width: 380px; 
+    }
+
+    @include breakpoint(l) {
+      width: 620px;
+      margin-right: -180px;
+      background: rgba(90,110,0, 0.5);
+    }
+
+    @include breakpoint(xl) {
+      width: 760px; 
+      margin-right: -380px;
+      background: rgba(0,110,0, 0.5);
+    }
+    object, video {width:100%;}
+  }
+}
+
+
+#extra-assets {
+  
+  @include breakpoint(l) {
+    float: right;
+    width: 220px;
+    background: rgba(100,0,0, 0.5)
+  }
+
+  @include breakpoint(xl) {
+    width: 360px;
+  }
+
+  blockquote {
+    @include margin(top-bottom);
+    font: 1.33em $alt_font; 
+
+    em {display:inline-block; float:right;  padding-top:.67em; font:13px $base_font; text-align:right; color:$inverse_alt;
+      &:before {content: '— ';}
+    }
+  }
+}

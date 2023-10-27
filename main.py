@@ -2,8 +2,6 @@ import pygame
 from LoadImage import LoadImage
 import random
 import sys
-import cv2
-import numpy as np
 
 pygame.init()
 
@@ -255,19 +253,19 @@ class Explosion(pygame.sprite.Sprite):
 class Props(pygame.sprite.Sprite):
     def __init__(self, x, y, props_type, props_direction, camera_x):
         pygame.sprite.Sprite.__init__(self) 
-  
+
         if props_type == "half_car":
             self.image = pygame.image.load("image/props/half_car.png")
         elif props_type == "moon_cross":
             self.image = pygame.image.load("image/props/moon_cross.png")
-  
-        self.image = pygame.image.load("image/props/half_car.png")
+            self.image = pygame.transform.flip(self.image, True, False)
+
         self.rect = self.image.get_rect()
         self.rect.center = (x - camera_x, y)
-  
+
         self.props_type = props_type
         self.props_direction = props_direction
-  
+
 
 class Bombs(pygame.sprite.Sprite):
 
@@ -471,39 +469,8 @@ class Gui:
         screen.blit(health_bar_cropped, self.health_bar_rect.topleft)
 
 
-class OldMovieFilter:
-    def __init__(self):
-        self.player = None
-  
-    def apply_old_movie_effect(self, frame):
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-  
-        noise = np.random.normal(0, 20, gray_frame.shape).astype(np.uint8)
-        noisy_frame = cv2.add(gray_frame, noise)
-  
-        h, w = noisy_frame.shape
-        for _ in range(500):
-            x, y = np.random.randint(0, w), np.random.randint(0, h)
-            noisy_frame[y, x] = 0 if np.random.rand() > 0.5 else 255
-  
-        noisy_frame = cv2.resize(noisy_frame, (frame.shape[1], frame.shape[0]))
-  
-        return cv2.cvtColor(noisy_frame, cv2.COLOR_GRAY2BGR)
-  
-    def apply_to_surface(self, surface):
-        frame = pygame.surfarray.array3d(surface)
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-  
-        old_movie_frame = self.apply_old_movie_effect(frame)
-  
-        old_movie_surface = pygame.surfarray.make_surface(old_movie_frame)
-        return old_movie_surface
-
-
 player = Player()
 gui = Gui(player)
-
-old_movie_filter = OldMovieFilter()
 
 pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (1080, 720))
@@ -517,6 +484,8 @@ last_bomb_spawn_time = pygame.time.get_ticks()
 class GameLoop:
     def __init__(self):
         pygame.init()
+        
+        self.player = player
         width, height = 1080, 720
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("The Running Zombie")
@@ -529,16 +498,21 @@ class GameLoop:
         self.death_animation_start_time = 0
         self.death_screen_duration = 1000
         self.death_screen_start_time = 1000
-  
+
         self.player = Player()
         self.gui = Gui(self.player)
         self.camera_x = 0
-  
+        
         self.props_group = pygame.sprite.Group()
         self.prop_images = ["half_car.png", "moon_cross.png"]
-  
+
+        prop = Props(70, 650, "half_car", "right", self.camera_x)
+        prop2 = Props(500, 410, "moon_cross", "left", self.camera_x)
+        self.props_group.add(prop, prop2)
+
         self.all_sprites = pygame.sprite.Group()
         self.all_sprites.add(self.player)
+        self.all_sprites.add(prop, prop2)
   
         self.last_bomb_spawn_time = pygame.time.get_ticks()
         self.bomb_spawn_delay = random.randint(2500, 4000)
@@ -548,9 +522,9 @@ class GameLoop:
         self.frozen_spawn_delay = random.randint(4000, 7000)
         
         props_group = pygame.sprite.Group()
-        prop = Props(120, 400, "half_car", "right", self.camera_x)
-        prop2 = Props(400, 400, "moon_cross", "left", self.camera_x)
-        props_group.add(prop, prop2)
+        prop = Props(70, 650, "half_car", "right", self.camera_x)
+        prop2 = Props(500, 410, "moon_cross", "left", self.camera_x)
+        self.props_group.add(prop, prop2)
         self.all_sprites.add(prop, prop2)
   
     def handle_events(self):
@@ -597,10 +571,6 @@ class GameLoop:
                 elif selected_action == "exit":
                     self.running = False
                     sys.exit()
-
-            if self.game_state == "playing":
-                frame = old_movie_filter.process_frame(self.screen.copy())
-                self.screen.blit(frame, (0, 0))
             
             if not self.death_animation_started:
                 if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
@@ -630,30 +600,20 @@ class GameLoop:
             if self.death_animation_started:
                 if current_time - self.death_animation_start_time >= self.death_animation_duration:
                     self.running = False
-  
+
+            self.props_group.update(self.camera_x)
+            self.props_group.draw(self.screen)
+            
             for bomb in bombs_group:
                 bomb.update(self.camera_x)
                 self.screen.blit(bomb.image,
                                 (bomb.rect.x - self.camera_x, bomb.rect.y))
-  
+            
             self.all_sprites.update(self.camera_x)
-  
-            self.props_group.update(self.camera_x)
-            self.props_group.draw(self.screen)
-  
             self.player.update(self.camera_x)
-  
             self.gui.draw_health_bar()
-  
             self.all_sprites.draw(self.screen)
-
-            sample_surface = pygame.Surface((width, height))
-            sample_surface.fill((255, 255, 255))
-          
-            old_movie_surface = old_movie_filter.apply_to_surface(sample_surface)
-
-            screen.blit(old_movie_surface, (0, 0))
-          
+            
             pygame.display.flip()
             self.clock.tick(60)
   

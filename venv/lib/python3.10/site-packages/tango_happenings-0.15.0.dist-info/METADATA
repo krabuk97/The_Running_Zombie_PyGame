@@ -1,0 +1,56 @@
+Metadata-Version: 2.1
+Name: tango-happenings
+Version: 0.15.0
+Summary: Reusable Django events and calendaring.
+Home-page: https://github.com/tBaxter/django-happenings
+Author: Tim Baxter
+Author-email: mail.baxter@gmail.com
+License: MIT
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Requires-Dist: python-card-me (==0.9.1)
+Requires-Dist: tango-shared-core (>=1.4)
+Requires-Dist: tango-comments (>=0.1)
+Requires-Dist: jinja2
+
+Tango Happenings
+=================
+
+[![Build Status](https://travis-ci.org/tBaxter/tango-happenings.svg?branch=master)](https://travis-ci.org/tBaxter/tango-happenings)
+
+A powerful Django calendar/events app. It works as part of Tango, or as a standalone app.
+
+Supports multi-day events, schedules, photos, updates, recaps and a bunch of other stuff.
+
+Includes a copy of jquery.hcal for easy calendar creation.
+
+Tango Happenings is tested for usage on both Python2 and Python3 installations.
+
+
+## Installation:
+
+    pip install tango-happenings
+
+or
+
+    pip install git+https://github.com/tBaxter/tango-happenings.git
+
+
+## Usage:
+
+Add 'happenings' and 'tango_shared' to your installed apps, then run syncdb or migrate.
+
+
+## Requirements
+
+* Installs python-card-me for ical/vcal integration
+* Tango Shared Core
+
+

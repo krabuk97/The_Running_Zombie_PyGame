@@ -15,7 +15,7 @@ def enum_keys(key):
     while True:
         try:
             yield winreg.EnumKey(key, at)
-        except OSError:  # noqa: PERF203
+        except OSError:
             break
         at += 1
 
@@ -139,7 +139,7 @@ def parse_version(version_str):
 
 
 def msg(path, what):
-    LOGGER.warning(f"PEP-514 violation in Windows Registry at {path} error: {what}")
+    LOGGER.warning("PEP-514 violation in Windows Registry at %s error: %s", path, what)
 
 
 def _run():

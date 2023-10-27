@@ -1,0 +1,28 @@
+Metadata-Version: 2.1
+Name: tango-comments
+Version: 0.10.0
+Summary: A simple port of the old django.contrib.comments into Tango.
+Home-page: http://github.com/tBaxter/tango-comments
+Author: Tim Baxter
+Author-email: mail.baxter@gmail.com
+License: LICENSE
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Utilities
+Requires-Dist: tango-shared-core (>=0.7)
+
+# Tango Comments
+
+This is simply a fast and dirty port of the old django.contrib.comments app, because it was deprecated, and I wanted to use Tango's UserContent model. 
+
+If contrib.comments worked for you, this probably would too. If not, skip it and use some other commenting solution.
+
+Or better yet, don't have comments at all. Internet comments are horrible anyway.
+
+

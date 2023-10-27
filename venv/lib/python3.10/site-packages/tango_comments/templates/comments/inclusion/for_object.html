@@ -1,0 +1,12 @@
+{% load comments %}
+
+<section id="comments">
+  <h3>Comments</h3>
+  {% include 'comments/inclusion/list.html' %}
+
+  {% if authenticated_request %}
+    {% render_comment_form for object %}
+  {% else %}
+    {% include "includes/signin_reg.html" %}
+  {% endif %}
+</section>

@@ -1,0 +1,114 @@
+@import '../core/_mixins.scss'; 
+@import '../core/_typography.scss'; 
+
+// Top content lays out the top items on a section front.
+// It includes #lead-item, and #more-featured
+#top-content {  
+	@include breakpoint(xl) {
+  	@include columned(phi);
+	}	
+
+	article { 
+    clear: right;
+  }
+
+  figure {
+    margin-bottom: $baseline;
+
+    @include breakpoint(m) {
+      width: 340px;
+      float: right;
+      margin-left: $halfGutter;
+    }
+    @include breakpoint(l) {
+      width: 100%;
+      float: none;
+      margin-left: 0;
+    }
+
+    &.vertical {
+    	float: right;
+    	width: 40%;
+    	margin-left: $halfGutter;
+
+    	figcaption { display: none }
+
+    	@include breakpoint(s) {
+    		width: 50%;
+    	}
+  	}
+  }
+
+  #lead-item { 
+    @include breakpoint(m) {
+      & figure {
+        max-width: 380px;
+        float: right;
+        margin-left: $gutter;
+      }
+    }
+
+    @include breakpoint(xl) {
+      width: 540px;
+      float: left;
+      
+      p { 
+        @include breakout-text();
+      }
+      & figure {
+        max-width: 100%;
+        float: none;
+        margin-left: 0;
+      }
+    }
+
+    @include breakpoint(xxl) {
+      width: 940px;
+
+      & figure {
+        max-width: 620px;
+        float: right;
+        margin-left: $gutter;
+      }
+    }
+  }
+
+  #more-featured {
+    h1 { 
+      @extend .medium-header;
+    }
+
+    figure {
+      float: right;
+      width: 40%;
+
+      @include breakpoint(s) {
+        width: 50%;
+      }
+    }
+
+    @include breakpoint(m) {
+      article {
+        @include columned($columns:2, $divided: true);
+      }
+    }
+    
+    @include breakpoint(xl) {
+      width: 300px; 
+      float: right;
+
+      article {
+        @include columned($columns:1, $divided: true);
+      }
+    }
+  }
+}
+
+#more_articles {
+  h1 { 
+    @extend .medium-header 
+  }
+  figure {
+    width: 32% 
+  }
+}

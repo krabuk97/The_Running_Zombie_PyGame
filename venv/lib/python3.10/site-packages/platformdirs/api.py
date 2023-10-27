@@ -58,8 +58,8 @@ class PlatformDirsABC(ABC):
         """
         self.multipath = multipath
         """
-        An optional parameter only applicable to Unix/Linux which indicates that the entire list of data dirs should be
-        returned. By default, the first item would only be returned.
+        An optional parameter which indicates that the entire list of data dirs should be returned.
+        By default, the first item would only be returned.
         """
         self.opinion = opinion  #: A flag to indicating to use opinionated values.
         self.ensure_exists = ensure_exists
@@ -158,6 +158,11 @@ class PlatformDirsABC(ABC):
         """:return: runtime directory tied to the user"""
 
     @property
+    @abstractmethod
+    def site_runtime_dir(self) -> str:
+        """:return: runtime directory shared by users"""
+
+    @property
     def user_data_path(self) -> Path:
         """:return: data path tied to the user"""
         return Path(self.user_data_dir)
@@ -231,3 +236,8 @@ class PlatformDirsABC(ABC):
     def user_runtime_path(self) -> Path:
         """:return: runtime path tied to the user"""
         return Path(self.user_runtime_dir)
+
+    @property
+    def site_runtime_path(self) -> Path:
+        """:return: runtime path shared by users"""
+        return Path(self.site_runtime_dir)

@@ -1,0 +1,43 @@
+
+@import 'core/_vars.scss';
+@import 'core/_common.scss';
+@import 'layout_snippets/_section_fronts.scss';
+
+// Now override any vars you need to...
+// $accent: #A91616;
+
+// Insert custom site styles.
+body { 
+  @include trans();
+  backgound-image: $texture;  }
+
+header[role=banner], 
+footer[role=contentinfo] {
+  > div {
+    position:relative;
+    padding: $baseline 0;
+    clear: both;
+  }
+}
+
+[role=navigation] {
+  [role=menu] > li {
+    @include pad(sides);
+    
+    &:hover {
+      background: transparentize($base, .1);
+      border-color: $base_alt;
+
+      a { color: $accent_alt }
+    }
+  }
+}
+
+/* Activate grids 
+#wrapper {
+  @include breakpoint(s) { background-image: url(../../img/site/grids/770.png); }
+  @include breakpoint(m) { background-image: url(../../img/site/grids/770.png); }
+  @include breakpoint(l) { background-image: url(../../img/site/940.jpg); }
+  @include breakpoint(xl) { background: url(../../img/site/1180.jpg) top left; }
+}
+*/

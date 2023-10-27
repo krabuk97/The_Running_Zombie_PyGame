@@ -1,0 +1,484 @@
+// Capo common styles
+
+
+// ------------ IMPORTS ---------------//
+@import '_reset.scss';                       // defines reset and core styles
+@import '_typography.scss';                  // typography
+@import '_mixins.scss';                      // defines mixins
+@import '_layout.scss';                      // layouts
+@import '../assets/_all_assets.scss';        // pull in asset helpers
+
+
+html { background: $base $texture; }
+
+body {
+  @include trans(all, .3s, linear);
+  font-family: $base_font;     // root font stack.
+  color: $inverse;
+  height: 100%;
+
+  &.collapsed {
+    header[role=banner] { 
+      position: fixed; 
+      z-index: 1000;
+      
+      h1 { max-width: 200px; }
+      h2 { display: none }
+      
+      [role="navigation"] {        
+        ul { 
+          @include breakpoint(s) { 
+            height: 0;
+            overflow:hidden;
+            margin: 0 
+          }; 
+        }
+      }
+    }
+  }
+
+  &:after { 
+    display: none;
+    content: "default";
+  }
+}
+
+header[role=banner], 
+footer[role=contentinfo] {  
+  nav {
+    [role=menu] { 
+      margin: 0;
+      > li {
+        @extend .margin-bottom;
+        font-weight: bold;
+        
+        li { 
+          @extend .sub-text;
+          font-weight: normal
+        }
+      }
+    }
+  }
+}
+
+// Navicon is a scalable menu navigation icon
+// generally, you'll want to put it inside a button element of some kind.
+// Example: <span class="button"><span class='navicon'>≡≡</span></span>
+.navicon {
+  @include pad(sides);
+  
+  display: block;
+  font-weight: bold; 
+  letter-spacing: -0.33em;
+
+  &:before {
+    content: "≡";
+    width: .33em; 
+    overflow: hidden; 
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  //&.activated { background: $accent_alt }
+}
+
+
+// applies to both main and complementary
+#content-wrapper {
+  figure {
+    img { border: 1px solid $accent_alt; }
+    figcaption {
+      @extend .sub-text;
+      @extend .pad-bottom;
+      color: $inverse_alt;
+      font-weight: normal;
+      .author { 
+        display: block; 
+        text-align: right; 
+        font: 9px $base_font; 
+        text-transform: uppercase; 
+        margin: -1.5em 0.5em 0 0; 
+      }
+      p { margin: 0 }
+    }
+  }
+
+  div[role=main] {
+    padding-bottom: $defaultMargin;
+    p, ul, ol, dl, table {
+      margin-bottom: $defaultMargin;
+    }
+  }
+}
+
+
+
+/************************ COMMON SEMI-SEMANTIC CLASSES ********************/
+
+/* Hide from both screenreaders and browsers: h5bp.com/u */
+.hide { display: none !important; visibility: hidden;}
+/* Hide visually and from screenreaders, but maintain layout */
+.invisible { visibility: hidden; }
+/* Hide only visually, but have it available for screenreaders: h5bp.com/v */
+.visuallyhidden { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; 
+  &.focusable:active, &.focusable:focus { /* Extends the .visuallyhidden class to allow the element to be focusable when navigated to via the keyboard: h5bp.com/p */
+    clip: auto; height: auto; margin: 0; overflow: visible; position: static; width: auto; 
+  }
+}
+
+/* Contain floats: h5bp.com/q */
+.clearfix { @include clearfix(); }
+
+.debug { background:#ffc; }
+.clear {
+  clear: both; 
+  margin: 0
+}
+
+hr.clear { visibility:hidden; }
+
+.right {float:right}
+img.right, figure.right {margin-left: $gutter; }
+.left { float:left }
+img.left, figure.left {margin-right: $gutter; }
+
+.ellipse{ 
+  overflow: hidden;
+  text-overflow: ellipsis; 
+  white-space: nowrap; 
+  width:100% 
+}
+
+// control element width to available max size
+.constrain { 
+  @include constrain();
+  
+}
+
+.block { display: block }
+
+// for content that needs to be 'broken out' and given more prominence
+.breakout {
+  @include radius(.5em);
+  @extend .breakout-text;
+  @extend .margin-sides;
+  @extend .pad-all;
+  display: block;
+  border: 1px solid lighten($base_alt2, 2%);
+  background: $base_alt2;
+  text-shadow: 0 1px 2px rgba(0,0,0, 0.8); 
+}
+
+// For objects that we wish to diminish the importance of.
+// Examples would be events that are recently over, and toxic posts.
+.diminish, .toxic { 
+  @include opacity(.6);
+  
+  &:hover {
+    @include opacity(1)
+  }
+}
+
+// for number counts on objects, like recently updated
+.counter { 
+  @include radius(1.5em);
+  @extend .small-text;
+
+  background: rgba($base, 0.9);
+  border: 1px solid $base_alt2;
+  line-height: 1.5em;
+  padding: .25em;
+  text-align: center;
+  display: inline-block;
+  min-width: 2em;
+  font-weight: normal;
+  color: $inverse_alt;
+
+  &.left { margin-right: $halfGutter; }
+}
+
+.avatar {
+  width: 80px;
+  display: block;
+  border: 1px solid $base_alt2;
+}
+a .avatar:hover {
+  border-color: $accent
+}
+
+
+.errorlist {
+  @extend .sub-text;
+  @extend .pad-all;
+  background: $error;
+  list-style: none; 
+  margin: 0; 
+  font-weight: bold; 
+}
+
+.messages {
+  margin: 0 0 $defaultMargin; 
+  padding: 0; 
+  list-style: none;
+
+  > li, .message {
+    @include radius($default_radius);
+    @extend .breakout-text;
+    @extend .pad-all;
+    border: 1px solid; 
+    background: $inverse;
+    color: $base_alt2;
+    text-shadow: 1px 1px 0 lighten($inverse, 20%);
+    
+    &:before {
+      font-size:1.5em
+    }
+
+    a { color: $base }
+  }
+  .message h4 { margin:0 }
+
+  .error {
+    color: $error;
+     &:before    { content: '\2639'; }
+    }
+  .debug, .warning {
+    background: $alert;
+    &:before    { content: '\26A0'; }
+  }
+  .info {color: #1F21BF;
+    &:before    { content: 'ℹ'; }
+  }
+  .success {
+    color: #0F8C35;
+    &:before { content: '\263A'; }
+    }
+}
+
+.signature {
+  @extend .small-text;
+  border-bottom: 1px solid $base_alt2;
+  text-align: right;
+}
+
+/**************************** STORY PAGES  *********************************/
+p.vcard { line-height: 1em }
+p.author {
+  @extend .sub-text;
+  font-weight: bold;
+  margin: 0; 
+  text-transform: uppercase
+}
+p.source-org {
+  @extend .small-text;
+  font-family: $alt_font; 
+}
+
+h2.overline {
+  @extend .medium-header;
+  margin-bottom: 0;
+}
+
+.sociallinks {
+  @include pad(top-bottom);
+  border: solid $base_alt; 
+  border-width: 2px 0; 
+
+  li {
+    @include pad(sides);
+    list-style: none;
+    display: inline-block; 
+    margin: 0;
+    font-size: 70%;
+    width: 24%;
+  }
+  li#social_fb { width:48% }
+  img {
+    border: 0; 
+    width: 24px; 
+    padding-right: 2px;
+  }
+  iframe {
+    border:none;
+    overflow:hidden;
+    width:90px;
+    height:21px;
+    margin-bottom: -0.67em;
+  }
+  a {
+    color:$inverse_alt;
+    font-weight:bold
+  }
+}
+.section_front article > a {
+  color: $inverse;
+  &:hover { color: darken($accent, 5) }
+}
+
+.story_detail {
+  .dateline {
+    @extend .sub-text;
+    font-weight: bold;
+    margin-top: $baseline;
+
+    &:after {
+      @include pad(sides);
+      content: '|'; 
+      color: $inverse_alt;
+      font-weight: normal
+    }
+  }
+  object, video { width:100%; }
+  .shirttail {
+    @extend .small-text;
+    @extend .pad-top-bottom;
+    color: $inverse_alt;
+    border-top: 2px solid $base_alt;
+    margin: 0;
+  }
+}
+
+/******************** user posts and comments **********/
+#comment-list {
+  article { 
+    clear:both; 
+    position:relative; 
+    margin-bottom:2em;
+
+    header, footer { @extend .small-text }
+    header {
+      @include pad(sides);
+      @include margin(bottom);
+      letter-spacing: 1px;
+      border-bottom: 1px solid $base_alt2; 
+      color: $accent;
+      @include breakpoint(s) {
+        padding-left: 100px;
+      }
+
+      time { 
+        float:right; 
+        margin-left: $halfGutter; 
+      }
+      .counter { float:right; margin-left: $halfGutter; }
+      a[rel=author] { font-weight:bold; }
+    } 
+    .avatar {
+      display:none;
+
+      @include breakpoint(s) {
+        margin-left: -100px;  
+        float: left; 
+        display: block;
+      }
+    }
+    .profile_preview {
+      margin: 0;
+      position: absolute;
+      top: 0;
+      left: 100px;
+      padding: 0 $gutter;
+      z-index:200;
+      width: 200px;
+      font-weight: normal;
+      background: $base;
+      border:1px solid $meta;
+      @include radius($default_radius);
+    }
+    .post {
+      @include breakpoint(s) {
+        margin:0 0 0 100px; 
+        min-height:40px;
+      }
+      p {
+        clear:right;
+        @include breakpoint(xs) {
+          @extend .body-text;
+        }
+      }
+
+      figure, p > img, figure >img {
+        width:auto;
+        float:right; clear:right;
+        margin: 0 0 $defaultMargin $gutter;
+        max-width:320px; 
+        @include breakpoint(m) {
+          max-width:540px;
+        }
+
+        &:after {
+          content: ' '; 
+          display:block;
+          clear:both
+        }
+
+        &.smiley {margin:0; float:none; border:0; display:inline; width:auto }
+        p:last-child {margin-bottom:0}
+      }
+
+      figure:first-child+p {clear:none}
+
+      figure:after, p > img:after  {
+        @include clearfix();
+        }
+    }
+
+    .postcontrols, .post-voting {
+      a[href*="/downvote/"]:hover, a[href*="/downvote/"]:active { background:#600 }
+      a[href*="/upvote/"]:hover, a[href*="/upvote/"]:active { background:#060 }
+
+    }
+    .postcontrols {
+      position: absolute; 
+      right: 0; 
+      z-index: 100;
+    }
+    .post-voting {
+      @include breakpoint(m) {
+        margin-left:45%;
+      }
+    }
+  }
+  article.toxic {
+    .avatar, .post, .postcontrols li.icon-quote {display:none}
+    .toxic-message {cursor:pointer;
+      &:before {content: '☢' }
+    }
+  }
+}
+#reply textarea {
+  width: 100%;
+}
+
+.markdown {
+  margin: 0 0.5em;
+  .markItUpHeader ul {
+    padding: 0; 
+    margin: 0;
+    position: relative;
+    li {
+      @include button();
+      @extend .small-text;
+      margin: 0;
+      vertical-align: top; 
+    
+      &.markItUpSeparator, a { display: none }
+    }
+    li.sub-nav {
+      position: absolute;
+      max-width: 7.5em;
+    }
+  }
+}
+
+
+.new { border-left: 4px solid $accent } // list items and such.
+a.new {                                 // actionable
+  @include radius($default_radius);
+  @extend .small-text;
+  display: inline-block; 
+  background: $accent;
+  border: 1px inset $base_alt2;
+  text-shadow: none;
+  color: $inverse; 
+}

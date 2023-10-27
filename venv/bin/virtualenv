@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/runner/TheRunningZombie2O/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

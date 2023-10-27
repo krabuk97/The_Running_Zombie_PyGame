@@ -1,0 +1,25 @@
+{% extends "galleries/base.html" %}
+{% load cache typogrify_tags %}
+
+
+{% block content %}
+  {% block section_head %}
+    <h1>Photo Galleries</h1>
+  {% endblock section_head %}
+
+  {% block gallery_list %}
+    <ul class="columned divided gallery-list">
+      {% for g in gallery_list|dictsort:"created" %}
+        <li>
+          <a href="{{ g.get_absolute_url }}">
+          <img src="{{ MEDIA_URL }}{{ g.get_image.image.t_360 }}" alt="{{ g.description }}">
+            <h2>
+              {{ g.title }}
+            </h2>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endblock gallery_list %}
+
+{% endblock content %}

@@ -8,6 +8,15 @@ authors = ["Your Name <you@example.com>"]
 python = ">=3.9,<3.13"
 pygame = "^2.1.2"
 dearpygui = "^1.6.2"
+replit = "3.3.2"
+requests = "2.31.0"
+numpy = "1.26.1"
+PyOpenGL = "^3.1.7"
+PySDL2 = "^0.9.16"
+raypy = "^0.0.3"
+django-tango = "^0.10.0"
+opencv-python = "^4.8.1"
+pyinstaller = "^6.1.0"
 
 [tool.poetry.dev-dependencies]
 debugpy = "^1.6.2"

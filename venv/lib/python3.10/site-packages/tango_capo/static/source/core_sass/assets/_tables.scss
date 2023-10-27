@@ -1,0 +1,40 @@
+// table is unclassed. It should suit 99% use cases. 
+// In the cases where it doesn't, class the special table, not every 'normal' table. Sheesh.
+
+table {
+  @extend .sub-text;
+  border-collapse: collapse; 
+  border-spacing: 0; 
+  width: 99.9%; 
+  margin: $thinMargin 0 $defaultMargin; 
+
+  caption { 
+    @extend .small-header;
+    border-bottom: 1px solid $base_alt; 
+    color: $inverse_alt; 
+    text-align: left; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    padding: 0 0 $thinMargin;
+  }
+  th { 
+    font-weight: bold; 
+    border-bottom: 2px solid $inverse_alt; 
+    text-align: left;
+    vertical-align: bottom;
+  }
+  td { 
+    @extend .small-text; 
+    @include pad(all);
+    vertical-align: top;
+    border-bottom: 1px solid $base_alt2; 
+  }
+  td.num { text-align: right } // numbers are right-aligned.
+  
+  // allows highlighting a given column
+  col.highlight { background: $base; font-weight:bold; } 
+
+  // zebra-striped tables.
+  // Note tbody must be present. We don't want to stripe headers or footers.
+  &.striped tbody tr:nth-child(even) { background: $base_alt; }
+}

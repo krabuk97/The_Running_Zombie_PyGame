@@ -4,6 +4,7 @@ entrypoint = "main.py"
 hidden = ["venv", ".config", "**/__pycache__", "**/.mypy_cache", "**/*.pyc"]
 
 audio = true
+modules = ["python-3.10:v11-20230711-eb29cca"]
 
 [nix]
 channel = "stable-22_11"

@@ -1,0 +1,320 @@
+// slideshows using Capo-modified version of refineSlide
+
+.rs-wrap,
+.rs-slider,
+.rs-thumb-wrap,
+.rs-controls,
+.rs-caption {
+  @include clearfix();
+  position: relative;
+}
+
+.rs-wrap img { 
+  display: block; 
+  width: 100%; 
+  -ms-interpolation-mode: bicubic;
+}
+
+//
+// Thumbnail elements
+.rs-thumb-wrap {
+  > a {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    text-align: center;
+    -webkit-backface-visibility: hidden; /* Hardware accelerate to prevent jumps on transition */
+    opacity: .7;
+    transition: opacity .2s ease-in-out;
+    
+    &:hover,
+    &.active { 
+      opacity: 1;
+    }
+
+    &:first-child { 
+      margin-left: 0 !important 
+    }
+
+    > img {
+      width: 120%;
+      vertical-align: bottom;
+    }
+
+    > span {
+      display: none;
+    }
+  }
+
+}
+
+.rs-thumb-viewer {
+  width: 100px;
+  margin-left: -50px;
+  border: 1px solid rgba(0,0,0,0.7);
+  position: absolute;
+  top: 100%;
+  z-index: 100;
+  display: none;
+  text-align: center;
+  line-height: 2em;
+  background: black;
+  color: white;
+
+  img {
+    width: 100%; 
+    display: block; 
+    opacity: 1;
+  }
+}
+
+// Slide elements
+.rs-slider > * {
+  opacity: 0;
+  width: 100%;
+  margin: 0 -100% 0 0;
+  float: left;
+  position: relative;
+  //background: $base_alt;
+  
+  > a {
+    display: block;
+  }
+
+  img {
+    margin: 0 auto;
+  }
+
+  &.vertical img { 
+    width: 50%; 
+  }
+  &.vertical.has-caption img {
+    margin: 0;
+  }
+
+  figcaption {
+    @include pad(all);
+    background: rgba($base_alt, 0.7);
+    //@include gradient(rgba($base, 0.45), rgba($base, 0.7));
+    // inset precludes use of box-shadow mixin right now.
+    box-shadow: 0 1px 0 rgba($inverse, .12) inset;
+    position: absolute;
+    max-height: 100%;
+    bottom: 0;
+    left: 0;
+    color: $base_alt;
+    border: 1px solid $base;
+
+    &.rs-top-left {
+        top: 0;
+        bottom: auto;
+    }
+
+    &.rs-top-right,
+    .vertical & {
+      top: 0;
+      right: 0;
+      left: auto;
+      bottom: auto;
+    }
+
+    &.rs-bottom-right {
+      right: 0;
+      left: auto;
+    }
+
+    &.rs-top {
+      top: 0;
+      bottom: auto;
+    }
+
+    &.rs-top,
+    &.rs-bottom { width: 100% !important }
+
+    &.rs-left {
+      top: 0;
+      height: 100%;
+    }
+
+    &.rs-right {
+      top: 0;
+      left: auto;
+      right: 0;
+      height: 100%;
+    }
+  }
+
+  &.vertical figcaption {
+    left: 50%; 
+    width: 50%; 
+    height: 100%;
+  }
+}
+
+
+// Thumbnail elements
+.rs-thumb-wrap {
+  > a, .rs-thumb-viewer {
+    border: 1px solid $accent_alt;
+    text-align: center;
+  }
+
+  > a {
+    @include trans();
+    opacity: 0.7;
+    display: inline-block;
+    vertical-align: bottom;
+    position: relative;
+    overflow: hidden;
+    margin-left: -1px;
+    -webkit-backface-visibility: hidden; /* Hardware accelerate to prevent jumps on transition */
+
+    &:first-child { margin-left: 0 !important }
+
+    img { vertical-align: bottom; }
+
+    > span { display: none; }
+    
+    
+    &:hover,
+    &.active { 
+      opacity: 1;
+      border-color: $accent;
+    }
+  }
+  .rs-thumb-viewer {
+    width: 120px;
+    margin-left: -60px;
+    position: absolute;
+    top: 100%;
+    z-index: 100;
+    display: none;
+    line-height: 2em;
+    background: $inverse;
+    color: $base;
+  }
+}
+
+
+
+/* ===[ Grid ]=== */
+
+.rs-grid {
+    position: absolute;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.rs-gridlet {
+    position: absolute;
+    opacity: 1;
+}
+
+/* Optional - remove captions at smaller screen widths
+@media screen and (max-width: 480px) {
+  .rs-caption { opacity: 0!important; }
+}
+*/
+
+
+/* ===[ Arrows ]=== */
+.rs-controls {
+  @extend .pager;
+  position: static;
+
+  button {
+    box-shadow: none;
+    margin: 0;
+    display: block;
+    background: transparent;
+    border: 0;
+
+    &:before, &:after {
+      display: none;
+    }
+  }
+
+  .rs-next,
+  .rs-prev {
+      @extend .large-header;
+      @include trans();
+      position: absolute;
+      width: 8%;
+      height: 75%;
+      top: 15%;
+      z-index: 15;
+      cursor: pointer;
+      font-weight: bold; 
+      opacity: 0.2;
+      color: $inverse;
+      text-shadow: 0 0 3px (rgba($base, 0.8));
+
+      &:hover {
+        opacity: 1;
+      }
+  }
+  .rs-next {
+      right: 0;
+      cursor: e-resize;
+  }
+  .rs-prev {
+      left: 0;
+      cursor: w-resize;
+  }
+  .fullscreen-toggle {
+    @extend .x-small-header;
+    @include pad(sides);
+    font-weight: bold;
+    float: right; 
+  }
+} 
+
+/* ===[ FULLSCREEN ]=== */
+
+.rs-wrap.rs-fullscreen {
+  position: fixed; 
+  width: 100%; 
+  height: 100%;
+  background: $base;
+  left: 0;
+  top: 0;
+  z-index: 5000;
+  background: $base;
+  color: $inverse;
+  
+  .rs-controls {
+    
+    .rs-counter {
+      @include pad(all);
+      @extend .x-small-header;
+      display: inline-block;
+    }
+
+    .rs-next,
+    .rs-prev {
+      color: $inverse;
+    }
+  }
+
+  .rs-slider > * {
+    background: transparent;
+  }
+  .rs-slider img {
+    width: auto;
+    max-width: 1200px !important;
+    max-height: 90% !important;
+  }
+  .fullscreen-toggle { 
+    @include pad(all);
+    background: $accent; 
+    color: $base;
+  }
+}
+
+//[data-slide-type="map"] {background: yellow;}
+//[data-slide-type=message] {background: blue;}
+
+

@@ -1,0 +1,12 @@
+// Set vars as needed
+
+
+@import '../site.scss';
+@import '../layout_snippets/_horizontal_navigation.scss';
+
+header[role=banner], 
+footer[role=contentinfo] {
+
+  nav a:hover {color: #000}
+  .navicon:before {color: $inverse_alt}
+}

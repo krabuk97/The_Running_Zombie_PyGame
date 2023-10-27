@@ -1,0 +1,22 @@
+Metadata-Version: 2.1
+Name: tango-voting
+Version: 0.4.1
+Summary: Generic voting application for Django,
+      based on django-voting by Jonathan Buchanan
+Home-page: https://github.com/tBaxter/django-voting
+Author: Jonathan Buchanan/Tim Baxter
+Author-email: mail.baxter@gmail.com
+License: LICENSE
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Utilities
+
+UNKNOWN
+
+

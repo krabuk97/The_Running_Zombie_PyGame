@@ -1,0 +1,40 @@
+// PAGINATION
+.pager {
+  @extend .sub-text;
+  @include margin(bottom);
+  background: $base; 
+  color:$inverse_alt; 
+  border-radius: 0.5em; 
+  min-height: $baseline * 2; 
+  margin: 0; 
+  list-style:none; 
+  padding: 0; 
+  text-align:center;
+  li {
+    width:40%; 
+    display:inline-block; 
+    padding:0 $halfGutter;
+     span, a { 
+      color: $inverse;
+      
+      &:hover {color: $accent;}
+     }
+  }
+  li.next, li.prev {
+    @extend .sub-text;
+    width: 29%; 
+  }
+
+  li.next {float: right; text-align: right; margin-left:-100%;
+    & a:before {float: right; content:"►"; padding-left: $halfGutter; }
+  }
+  li.prev {float: left; text-align: left; margin-right:-100%;
+    & a:before { float: left; content:"◀"; padding-right: $halfGutter; }
+  }
+  li.next a:before, li.prev a:after { display:inline-block; }
+
+  &.prev-next {
+    li.next, li.prev {width:49%; float:none; margin: 0}
+    li > a { display: block; padding: $baseline 0; }
+  }
+}

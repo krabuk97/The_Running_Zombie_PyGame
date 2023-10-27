@@ -1,0 +1,7 @@
+[console_scripts]
+twitter = twitter.cmdline:main
+twitter-archiver = twitter.archiver:main
+twitter-follow = twitter.follow:main
+twitter-log = twitter.logger:main
+twitter-stream-example = twitter.stream_example:main
+twitterbot = twitter.ircbot:main

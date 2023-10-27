@@ -1,0 +1,50 @@
+[role=main], [role=complementary] {
+  @include breakpoint(s) {display: inline-block; vertical-align: top;} 
+}
+ 
+[role=main] {
+  width: 100%;
+
+  @include breakpoint(l) {
+    width: 630px;
+    margin-right: -2px;
+  }
+  @include breakpoint(xl) {
+    width: 860px;
+    padding-right: $halfGutter;
+  }
+  @include breakpoint(xxl) {
+    width: 1250px;
+  }
+}
+
+[role=complementary] {
+  @include breakpoint(s) {
+    width: 308px;
+    padding-left: $halfGutter;
+  } 
+}
+ 
+// with body class 'wide', only main content shown.
+.wide {
+  [role=main], [role=complementary] { width:100% }
+  [role=complementary] { padding-left: 0 }
+}
+ 
+// with body class 'split', split page in two equal halves
+.split {
+  [role=main], [role=complementary] { width: 49.8% }
+  [role=complementary] { @extend .body-text }
+}
+ 
+// body class reverse moves complementary content to left side. 
+// requires floats and is a bit dodgy, really.
+.reverse {
+  [role=main] {
+    @include breakpoint(s) { float: right; }
+  }
+  [role=complementary] { 
+    @include breakpoint(s) { float: left; padding-left: 0; padding-right: $gutter } 
+    @include breakpoint(l) { padding-right: $gutter * 2 }
+  }
+}

@@ -1,0 +1,117 @@
+/****** GRIDDED CONTENT *******************************
+*  Gridded content. Can have 1-6 columns. 3 is default.
+*  Children can be any element: div, li, section, whatever.
+*  usage:  foo class="columned"
+*  or   :  foo class="columned four-col"
+*  Note: on small screens multiple columns will be reset to a more appropriate width.
+*  Includes support for "auto" which sets the number of columns 
+*  according to available sensible width. 
+*  'Auto' should be considered experimental and used with caution.
+*******************************************************/
+
+@mixin columned($columns:3, $divided: false) {
+  margin: 0; 
+  padding: 0;
+  list-style: none; 
+  position: relative;
+  padding-right: 0 !important; // in case it inherits from parent
+  
+  > * {
+    display: inline-block;
+    width: auto;
+    width: 33%;
+    position: relative; 
+    vertical-align: top; 
+    padding-right: $gutter;
+    margin-right: -4px;
+    // Hack crappy old IE for inline-block
+    *zoom: 1;
+    *display: inline;
+
+    @if $columns == 1 {
+      width: auto;
+      clear: none
+    }
+
+    @if $columns == 2 {
+      width: 49.5%;
+    }
+    @if $columns == 4 {
+      width: 49%;
+      @include breakpoint(m) { width: 25%; }
+    }
+    @if $columns == 5 {
+      width: 20%;
+    }
+    @if $columns == 6 {
+      width: 16.5%;
+    }
+    @if $columns == auto {
+      width: auto;
+      @include breakpoint(m) { width: 49%; } 
+      @include breakpoint(l) { width: 33.0%; } 
+      @include breakpoint(xl) { width: 19.9%; } 
+    }
+    @if $columns == phi {
+      &:nth-child(odd) { 
+        width: 72%; 
+        padding-right: 0;
+      }
+      &:nth-child(even) {
+        width: 28%; 
+        padding-left: $gutter;
+        padding-right: 0;
+      }
+    }
+  }
+
+  @if $divided {
+    @include breakpoint(s) { 
+      @include pad(sides);
+      border-left: 1px solid $base_alt2;
+
+      &:first-child { // completely naive. Re-do
+        border-left: 0;
+        padding-left: 0;
+      }
+    }
+  }
+}
+
+.columned { 
+  @include columned(3);
+}
+.columned.two-col {
+  @include columned(1);
+}
+.columned.two-col {
+  @include columned(2);
+}
+.columned.three-col {
+  @include columned(3);
+}
+.columned.four-col {
+  @include columned(4);
+}
+
+.columned.phi.reverse > * {
+    &:nth-child(odd)  { width: 28.19% }
+    &:nth-child(even) {
+      width: 71.8%; 
+      padding: 0;
+    }
+  }
+
+.grid { // use with columned
+  @extend .sub-text;
+  
+  figure { 
+    width: 32%; 
+    margin-bottom: $defaultMargin 
+  }
+  small.meta { display: block; }
+
+  > * {
+    padding: 0 $gutter $defaultMargin  0;
+  }
+}

@@ -1,0 +1,56 @@
+@import '../core/_mixins.scss'; 
+
+header[role=banner] > div,
+#content-wrapper,
+[role=contentinfo] {
+  @include constrain();
+}
+
+
+header[role=banner] {
+  @include pad(top);
+  @include margin(bottom);
+  top: 0; 
+  width: 100%; 
+  z-index: 100; 
+  
+  .site-name {
+    padding-right: $gutter;
+
+    h1 { 
+      @extend .large-header;
+    }
+
+    h2 { 
+      @extend .pad-top-bottom;
+      display: none;
+      
+      @include breakpoint(s) {
+        display:block
+      }
+    }
+  }
+  
+  > div {
+    @extend .clearfix;
+    
+    @include breakpoint(m) {
+      // mimic phi reversed
+      //.site-name {width: 25%; float: left; }
+      nav { width: 74%; float: right;}
+    }
+  }
+}
+
+[role=menu] {
+  padding-top: $baseline;
+  @extend .columned;
+
+  @include breakpoint(l) {
+    @extend .six-col;
+  }
+}
+
+footer[role=contentinfo] {
+  @include margin(top);
+}

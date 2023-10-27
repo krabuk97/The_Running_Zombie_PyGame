@@ -1,0 +1,195 @@
+$wider_nav_width: 220px;
+
+// Rules for small navigation.
+// Should be applied to [role=navigation]
+@mixin minimized_nav() {
+  @include trans(width, 0.2s, ease);
+  position: fixed;
+  top: 0;
+  width: $nav_width;
+  min-height: 100%;
+  text-align: right;
+  left: -($nav_width - 20);
+
+  [role=menu] {
+    @include trans();
+    @include transform(scale(0.03, 0.3) translateZ(0)/* Hot performance 10x hack */);
+    @include margin(top);
+    position: relative;
+    left: 40%;
+    max-height: 90%;
+    overflow-y: auto;
+
+    li {
+      @include trans();
+      @include margin(bottom);
+      height: 0;
+      background: transparent;
+      border-bottom: 1em solid $base; // sets navicon color
+    }
+    a {
+      @include opacity(0)
+    }
+  }
+}
+
+// rules for large navigation
+@mixin maximized_nav() {
+  position: absolute;
+  height: 100%;
+  left: -$nav_width;
+
+  @include breakpoint(l) { 
+    width: $wider_nav_width;
+  }
+
+  [role=menu] {
+    @include transform(scale(1.0));
+    left: 0;
+
+    li {
+      height: auto;
+      border-bottom-width: 2px;      
+    }
+
+    a {
+      @include opacity(1);
+    }
+  }
+}
+
+/********** End mixins ************/
+
+
+html, body {
+  position: relative; 
+  height: 100%;
+}
+
+#wrapper,
+header[role=banner] > div {
+  @include constrain();
+  @include kill_trans();
+
+  padding-left: 30px;
+}
+
+[role=navigation] {
+  @include minimized_nav();
+
+  @include breakpoint(m) { 
+    @include maximized_nav();
+  }
+
+  .navicon {
+    @include small-header(); 
+    white-space: nowrap;
+    display: inline-block;
+    width: 30px;
+
+    @include breakpoint(m) { 
+      visibility: hidden;
+    }
+  }
+}
+
+// body class added when menu is activated
+.nav-active {
+  [role=navigation] {
+    @include maximized_nav();
+  }
+}
+
+#wrapper {
+  position: relative;
+  min-height: 100%;
+
+  @include breakpoint(m) { 
+    [role=navigation] {
+      position: absolute;
+      left: 0;
+    }
+  }
+
+  @include breakpoint(m) {
+    padding-left: $nav_width + ($gutter/2);
+  }
+
+  @include breakpoint(l) {
+    padding-left: $wider_nav_width + $gutter;
+  }
+
+  .nav-active & {
+    left: $nav_width;
+    position: fixed;
+
+    @include breakpoint(m) { 
+      left: inherit;
+      position: relative;
+    }
+  } 
+}
+
+#content-wrapper {
+  @include pad(top);
+}
+
+footer[role=contentinfo] {
+  @include breakpoint(m) { 
+    margin-left: -($wider_nav_width);
+    padding-left: $wider_nav_width;
+  }
+}
+
+
+// override main widths from layout
+[role=main] {
+  width: 100%;
+
+  @include breakpoint(l) {
+    width: 700px;
+  }
+  @include breakpoint(xl) {
+    width: 1000px;
+    padding-right: 0;
+  }
+  @include breakpoint(xxl) {
+    width: 1380px;
+  }
+}
+
+// override section front width from section_fronts
+// Top content lays out the top items on a section front.
+// It includes #lead-item, and #more-featured
+#top-content {  
+  #lead-item { 
+    @include breakpoint(xl) {
+      width: 700px;
+      
+      & figure {
+        max-width: 460px;
+        float: right;
+        margin-left: $gutter;
+      }
+    }
+
+    @include breakpoint(xxl) {
+      width: 980px;
+
+      & figure {
+        max-width: 620px;
+      }
+    }
+  }
+
+  #more-featured {
+    @include breakpoint(xl) {
+      width: 300px; 
+      float: right;
+    }
+    @include breakpoint(xxl) {
+      width: 400px; 
+    }
+  }
+}
+
