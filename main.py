@@ -2,6 +2,11 @@ import pygame
 from LoadImage import LoadImage
 import random
 import sys
+from props import Props
+from gui import Gui
+from afterdeath import AfterDeath
+from bombs import Bombs, Explosion
+from menu import Menu 
 
 pygame.init()
 
@@ -164,169 +169,6 @@ class Player(pygame.sprite.Sprite):
           if self.facing_left:
             self.image = pygame.transform.flip(self.image, True, False)
   
-  
-class Explosion(pygame.sprite.Sprite):
-
-    def __init__(self, x, y, player, explosion_type):
-      super().__init__()
-      self.player = player
-      self.explosion_type = explosion_type
-      self.animation_delay = 100
-      self.animation_counter = 0
-      self.animation_start_time = pygame.time.get_ticks()
-      self.finished = False
-      self.distance_threshold = 0
-      self.damage_amount = 0
-  
-      if explosion_type == "normal":
-        self.images = [
-          pygame.image.load(image_path).convert_alpha()
-          for image_path in LoadImage.explosion_files
-        ]
-        self.images = [
-          pygame.transform.scale(image, (150, 150)) for image in self.images
-        ]
-        self.distance_threshold = 90
-        self.damage_amount = 5
-  
-      elif explosion_type == "nuke":
-        self.images = [
-          pygame.image.load(image_path).convert_alpha()
-          for image_path in LoadImage.nuke
-        ]
-        self.images = [
-          pygame.transform.scale(image, (300, 300)) for image in self.images
-        ]
-        self.distance_threshold = 250
-        self.damage_amount = 50
-  
-      elif explosion_type == "frozen":
-        self.images = [
-          pygame.image.load(image_path).convert_alpha()
-          for image_path in LoadImage.frozen_bomb
-        ]
-        self.images = [
-          pygame.transform.scale(image, (150, 150)) for image in self.images
-        ]
-        self.distance_threshold = 90
-        self.damage_amount = 0
-  
-      self.image_index = 0
-      self.image = self.images[self.image_index]
-      self.rect = self.image.get_rect(center=(x, y))
-  
-    def update(self, camera_x):
-      current_time = pygame.time.get_ticks()
-      elapsed_time = current_time - self.animation_start_time
-  
-      if elapsed_time >= self.animation_delay:
-        self.animation_counter += 1
-        self.animation_start_time = current_time
-  
-      if self.animation_counter < len(self.images):
-        self.image = self.images[self.animation_counter]
-  
-      if self.rect.bottom > height:
-        self.rect.bottom = height
-  
-      if self.animation_counter >= len(self.images) - 1:
-        if not self.finished:
-          self.finished = True
-          self.handle_collisions()
-          self.kill()
-  
-    def handle_collisions(self):
-      if self.player:
-        player_rect = self.player.rect
-        player_center_x = player_rect.centerx
-        player_bottom = player_rect.bottom
-  
-        if (player_center_x - self.rect.centerx) ** 2 + (player_bottom - self.rect.bottom) ** 2 <= self.distance_threshold ** 2:
-          if self.explosion_type == "frozen":
-              self.player.frozen = True
-              self.player.frozen_duration = 0
-          else:
-              self.player.health -= self.damage_amount
-              self.player.slow_duration = 420
-  
-  
-class Props(pygame.sprite.Sprite):
-    def __init__(self, x, y, props_type, props_direction, camera_x):
-        pygame.sprite.Sprite.__init__(self) 
-
-        if props_type == "half_car":
-            self.image = pygame.image.load("image/props/half_car.png")
-        elif props_type == "moon_cross":
-            self.image = pygame.image.load("image/props/moon_cross.png")
-            self.image = pygame.transform.flip(self.image, True, False)
-
-        self.rect = self.image.get_rect()
-        self.rect.center = (x - camera_x, y)
-
-        self.props_type = props_type
-        self.props_direction = props_direction
-
-
-class Bombs(pygame.sprite.Sprite):
-
-    def __init__(self, player, bomb_type, x, y):
-      super().__init__()
-  
-      if bomb_type == "nuke":
-        self.image = pygame.image.load("image/bomb_nuke.png").convert_alpha()
-        self.image = pygame.transform.rotate(self.image, -90)
-      elif bomb_type == "regular":
-        self.image = pygame.image.load("image/bomb_reg.png").convert_alpha()
-      elif bomb_type == "frozen":
-        self.image = pygame.image.load("image/frozen_bomb.png").convert_alpha()
-  
-      self.image = pygame.transform.scale(self.image, (60, 60))
-      self.rect = self.image.get_rect()
-      self.rect.centerx = x
-      self.rect.top = y
-      self.speed = 4
-      self.exploded = False
-      self.player = player
-      self.bomb_type = bomb_type
-  
-    def update(self, camera_x):
-      if not self.exploded:
-        self.rect.y += self.speed
-  
-        if self.rect.bottom >= height:
-          self.exploded = True
-          self.explode()
-  
-        if self.rect.bottom > height:
-          self.rect.bottom = height
-  
-    def random_bomb(self):
-      bomb_x = random.randint(0, width - self.rect.width)
-      bomb_y = 0
-      bomb_type = "regular" if random.random() < 0.8 else "nuke" or "frozen"
-      bomb = Bombs(self.player, bomb_type, bomb_x, bomb_y)
-      all_sprites.add(bomb)
-      bombs_group.add(bomb)
-  
-    def explode(self):
-      explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
-      explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player,
-                            explosion_type)
-      all_sprites.add(explosion)
-  
-      if self.bomb_type == "regular":
-        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player,
-                              "normal")
-        all_sprites.add(explosion)
-  
-      if self.bomb_type == "frozen":
-        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player,
-                              "frozen")
-        all_sprites.add(explosion)
-  
-      self.kill()
-      bombs_group.add(explosion)
-
 
 class Menu:
     def __init__(self, screen, menu_image, start_button_image, exit_button_image, restart_button_image):
@@ -388,87 +230,6 @@ while True:
     menu.draw()
     pygame.display.flip()
 
-
-class AfterDeath:
-    def __init__(self, screen, background, restart_button, exit_button):
-        self.screen = screen
-        self.background = background
-        self.restart_button = pygame.transform.scale(restart_button, (200, 210))
-        self.exit_button = pygame.transform.scale(exit_button, (200, 210))
-        self.restart_button_scaled = self.restart_button.copy()
-        self.exit_button_scaled = self.exit_button.copy()
-        self.selected_button = None
-        self.button_hover_scale = 1.1
-  
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-                if self.restart_button_rect.collidepoint(mouse_pos):
-                    return "restart"
-                elif self.exit_button_rect.collidepoint(mouse_pos):
-                    return "exit"
-        return None
-  
-    def draw(self):
-        self.screen.blit(self.background, (0, 0))
-        self.screen.blit(self.restart_button_scaled, self.restart_button_rect.topleft)
-        self.screen.blit(self.exit_button_scaled, self.exit_button_rect.topleft)
-        pygame.display.flip()
-  
-    def run(self):
-        self.restart_button_rect = self.restart_button.get_rect(topleft=(70, 500))
-        self.exit_button_rect = self.exit_button.get_rect(topright=(1000, 500))
-  
-        selected_action = None
-  
-        while selected_action is None:
-            selected_action = self.handle_events()
-  
-            x, y = pygame.mouse.get_pos()
-            if self.restart_button_rect.collidepoint(x, y):
-                self.selected_button = "restart"
-                self.restart_button_scaled = pygame.transform.scale(self.restart_button, (
-                    int(self.restart_button.get_width() * self.button_hover_scale),
-                    int(self.restart_button.get_height() * self.button_hover_scale)))
-            elif self.exit_button_rect.collidepoint(x, y):
-                self.selected_button = "exit"
-                self.exit_button_scaled = pygame.transform.scale(self.exit_button, (
-                    int(self.exit_button.get_width() * self.button_hover_scale),
-                    int(self.exit_button.get_height() * self.button_hover_scale)))
-            else:
-                self.selected_button = None
-                self.restart_button_scaled = self.restart_button.copy()
-                self.exit_button_scaled = self.exit_button.copy()
-  
-            self.draw()
-  
-        return selected_action
-    
-
-class Gui:
-    def __init__(self, player):
-        self.player = player
-        self.health_bar_full = player.health_bar_full
-        self.health_bar_width = self.health_bar_full.get_width()
-        self.health_bar_rect = self.health_bar_full.get_rect(topleft=(50, 50))
-  
-    def calculate_health_bar_width(self):
-        health_percent = max(0, self.player.health) / 100.0
-        return int(health_percent * self.health_bar_width)
-  
-    def draw_health_bar(self):
-        health_bar_width = self.calculate_health_bar_width()
-  
-        health_bar_cropped = pygame.Surface((health_bar_width, self.health_bar_rect.height))
-        health_bar_cropped.blit(self.health_bar_full, (0, 0), (0, 0, health_bar_width, self.health_bar_rect.height))
-  
-        screen.blit(health_bar_cropped, self.health_bar_rect.topleft)
-
-
 player = Player()
 gui = Gui(player)
 
@@ -479,7 +240,6 @@ death_screen = pygame.transform.scale(LoadImage.death_screen, (1080, 720))
 all_sprites = pygame.sprite.Group()
 
 last_bomb_spawn_time = pygame.time.get_ticks()
-
 
 class GameLoop:
     def __init__(self):
