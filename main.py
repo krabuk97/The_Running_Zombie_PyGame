@@ -19,8 +19,6 @@ white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
 
-bombs_group = pygame.sprite.Group()
-
 
 class Player(pygame.sprite.Sprite):
 
@@ -114,7 +112,7 @@ class Player(pygame.sprite.Sprite):
       if self.health < 0:
         self.health = 0
   
-      if self.invincible == True:
+      if self.invincible is True:
         self.health = 20000
   
       if self.rect.bottom > height:
@@ -168,58 +166,10 @@ class Player(pygame.sprite.Sprite):
   
           if self.facing_left:
             self.image = pygame.transform.flip(self.image, True, False)
-  
-
-class Menu:
-    def __init__(self, screen, menu_image, start_button_image, exit_button_image, restart_button_image):
-        self.screen = screen
-        self.menu_image = pygame.transform.scale(LoadImage.menu_image, (1080, 720))
-        self.start_button_image = pygame.transform.scale(LoadImage.start_button, (200, 210))
-        self.exit_button_image = pygame.transform.scale(LoadImage.exit_button, (200, 210))
-        self.menu_image = pygame.transform.scale(menu_image, (1080, 720))
-        self.start_button_image = pygame.transform.scale(start_button_image, (200, 210))
-        self.exit_button_image = pygame.transform.scale(exit_button_image, (200, 210))
-        self.start_button_rect = self.start_button_image.get_rect(topleft=(70, 500))
-        self.exit_button_rect = self.exit_button_image.get_rect(topright=(1000, 500))
-        self.selected_button = None
-        self.button_hover_scale = 1.1
-        self.start_button_scaled = self.start_button_image.copy()
-        self.exit_button_scaled = self.exit_button_image.copy()
-
-    def draw(self):
-        self.screen.blit(self.menu_image, (0, 0))
-        self.screen.blit(self.start_button_scaled, self.start_button_rect.topleft)
-        self.screen.blit(self.exit_button_scaled, self.exit_button_rect.topleft)
-
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.MOUSEMOTION:
-                x, y = event.pos
-                if self.start_button_rect.collidepoint(x, y):
-                    self.selected_button = "start"
-                    self.start_button_scaled = pygame.transform.scale(self.start_button_image, (
-                        int(self.start_button_image.get_width() * self.button_hover_scale),
-                        int(self.start_button_image.get_height() * self.button_hover_scale)))
-                elif self.exit_button_rect.collidepoint(x, y):
-                    self.selected_button = "exit"
-                    self.exit_button_scaled = pygame.transform.scale(self.exit_button_image, (
-                        int(self.exit_button_image.get_width() * self.button_hover_scale),
-                        int(self.exit_button_image.get_height() * self.button_hover_scale)))
-                else:
-                    self.selected_button = None
-                    self.start_button_scaled = self.start_button_image.copy()
-                    self.exit_button_scaled = self.exit_button_image.copy()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                if self.start_button_rect.collidepoint(x, y):
-                    return "start"
-                elif self.exit_button_rect.collidepoint(x, y):
-                    pygame.quit()
-                    sys.exit()
-        return None
+    
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+        
 
 menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button, LoadImage.restart_button)
 
@@ -237,9 +187,14 @@ pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (1080, 720))
 death_screen = pygame.transform.scale(LoadImage.death_screen, (1080, 720))
 
+bombs_group = pygame.sprite.Group()
+
 all_sprites = pygame.sprite.Group()
 
 last_bomb_spawn_time = pygame.time.get_ticks()
+
+explosion = Explosion(Bombs.rect.centerx, Bombs.rect.bottom, player, explosion_type)
+explosion_group.add(explosion)
 
 class GameLoop:
     def __init__(self):
@@ -259,7 +214,6 @@ class GameLoop:
         self.death_screen_duration = 1000
         self.death_screen_start_time = 1000
 
-        self.player = Player()
         self.gui = Gui(self.player)
         self.camera_x = 0
         
@@ -281,11 +235,13 @@ class GameLoop:
         self.last_frozen_spawn_time = pygame.time.get_ticks()
         self.frozen_spawn_delay = random.randint(4000, 7000)
         
-        props_group = pygame.sprite.Group()
+        pygame.sprite.Group()
         prop = Props(70, 650, "half_car", "right", self.camera_x)
         prop2 = Props(500, 410, "moon_cross", "left", self.camera_x)
         self.props_group.add(prop, prop2)
         self.all_sprites.add(prop, prop2)
+
+        self.player = Player()
   
     def handle_events(self):
         for event in pygame.event.get():
@@ -308,6 +264,8 @@ class GameLoop:
         self.frozen_spawn_delay = random.randint(4000, 7000)
     
     def run(self):
+        after_death = AfterDeath(self.screen, death_screen, LoadImage.restart_button, LoadImage.exit_button)
+        
         while self.running:
             self.handle_events()
             current_time = pygame.time.get_ticks()
@@ -321,7 +279,6 @@ class GameLoop:
             elif self.game_state == "death_animation":
                 if current_time - self.death_animation_start_time >= self.death_animation_duration:
                     self.game_state = "death_screen"
-                    after_death = AfterDeath(self.screen, death_screen, LoadImage.restart_button, LoadImage.exit_button)
                     self.player.animate()
   
             elif self.game_state == "death_screen":
@@ -353,8 +310,8 @@ class GameLoop:
   
             self.camera_x = max(
                 0,
-                min(self.player.rect.x - (width // 2),
-                    background1.get_width() - width))
+                min(int(self.player.rect.x - (width // 2)),
+                    int(background1.get_width() - width)))
             self.screen.blit(background1, (-self.camera_x, 0))
   
             if self.death_animation_started:
@@ -368,11 +325,15 @@ class GameLoop:
                 bomb.update(self.camera_x)
                 self.screen.blit(bomb.image,
                                 (bomb.rect.x - self.camera_x, bomb.rect.y))
+
+            for explosion in explosion_group:
+                explosion.update(self.camera_x)
             
             self.all_sprites.update(self.camera_x)
             self.player.update(self.camera_x)
             self.gui.draw_health_bar()
             self.all_sprites.draw(self.screen)
+            self.player.draw(self.screen)
             
             pygame.display.flip()
             self.clock.tick(60)
