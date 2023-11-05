@@ -6,7 +6,7 @@ from props import Props
 from gui import Gui
 from afterdeath import AfterDeath
 from bombs import Bombs, Explosion
-from menu import Menu 
+from menu import Menu
 
 pygame.init()
 
@@ -18,7 +18,6 @@ pygame.display.set_caption("The Running Zombie")
 white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
-
 
 class Player(pygame.sprite.Sprite):
 
@@ -187,14 +186,8 @@ pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (1080, 720))
 death_screen = pygame.transform.scale(LoadImage.death_screen, (1080, 720))
 
+explosion_group = pygame.sprite.Group()
 bombs_group = pygame.sprite.Group()
-
-all_sprites = pygame.sprite.Group()
-
-last_bomb_spawn_time = pygame.time.get_ticks()
-
-explosion = Explosion(Bombs.rect.centerx, Bombs.rect.bottom, player, explosion_type)
-explosion_group.add(explosion)
 
 class GameLoop:
     def __init__(self):
@@ -213,6 +206,7 @@ class GameLoop:
         self.death_animation_start_time = 0
         self.death_screen_duration = 1000
         self.death_screen_start_time = 1000
+        self.bombs_group = pygame.sprite.Group()
 
         self.gui = Gui(self.player)
         self.camera_x = 0
@@ -242,12 +236,12 @@ class GameLoop:
         self.all_sprites.add(prop, prop2)
 
         self.player = Player()
-  
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-  
+
     def restart_game(self):
         self.game_state = "playing"
         self.player = Player()
@@ -255,17 +249,17 @@ class GameLoop:
         self.camera_x = 0
         self.all_sprites.empty()
         self.all_sprites.add(self.player)
-        bombs_group.empty()
+        self.bombs_group.empty()
         self.last_bomb_spawn_time = pygame.time.get_ticks()
         self.bomb_spawn_delay = random.randint(2500, 4000)
         self.last_nuke_spawn_time = pygame.time.get_ticks()
         self.nuke_spawn_delay = random.randint(4000, 7000)
         self.last_frozen_spawn_time = pygame.time.get_ticks()
         self.frozen_spawn_delay = random.randint(4000, 7000)
-    
+
     def run(self):
         after_death = AfterDeath(self.screen, death_screen, LoadImage.restart_button, LoadImage.exit_button)
-        
+
         while self.running:
             self.handle_events()
             current_time = pygame.time.get_ticks()
@@ -288,23 +282,26 @@ class GameLoop:
                 elif selected_action == "exit":
                     self.running = False
                     sys.exit()
-            
+
             if not self.death_animation_started:
                 if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
                     bomb_regular = Bombs(self.player, "regular", random.randint(0, width), 0)
                     self.all_sprites.add(bomb_regular)
+                    bombs_group.add(bomb_regular)  # Add the bomb to the bombs_group
                     self.last_bomb_spawn_time = current_time
                     self.bomb_spawn_delay = random.randint(2500, 4000)
-  
+
             if current_time - self.last_nuke_spawn_time >= self.nuke_spawn_delay:
                 bomb_nuke = Bombs(self.player, "nuke", random.randint(0, width), 0)
                 self.all_sprites.add(bomb_nuke)
+                bombs_group.add(bomb_nuke)  # Add the bomb to the bombs_group
                 self.last_nuke_spawn_time = current_time
                 self.nuke_spawn_delay = random.randint(4000, 7000)
-  
+
             if current_time - self.last_frozen_spawn_time >= self.frozen_spawn_delay:
                 bomb_frozen = Bombs(self.player, "frozen", random.randint(0, width), 0)
                 self.all_sprites.add(bomb_frozen)
+                bombs_group.add(bomb_frozen)  # Add the bomb to the bombs_group
                 self.last_frozen_spawn_time = current_time
                 self.frozen_spawn_delay = random.randint(5000, 8000)
   
