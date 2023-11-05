@@ -5,7 +5,7 @@ import sys
 from props import Props
 from gui import Gui
 from afterdeath import AfterDeath
-from bombs import Bombs, Explosion
+from bombs import Bombs, Explosion, HealthPack
 from menu import Menu
 
 pygame.init()
@@ -186,8 +186,10 @@ pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (1080, 720))
 death_screen = pygame.transform.scale(LoadImage.death_screen, (1080, 720))
 
-explosion_group = pygame.sprite.Group()
 bombs_group = pygame.sprite.Group()
+explosion_group = pygame.sprite.Group()
+
+health_packs_group = pygame.sprite.Group()
 
 class GameLoop:
     def __init__(self):
@@ -283,6 +285,20 @@ class GameLoop:
                     self.running = False
                     sys.exit()
 
+            if random.random() < 0.02:
+                health_pack = HealthPack(random.randint(0, width - 30), 0)
+                self.all_sprites.add(health_pack)
+                health_packs_group.add(health_pack)
+
+            for health_pack in health_packs_group:
+                health_pack.update(self.camera_x)
+                if health_pack.rect.top > height:
+                    health_pack.kill()
+
+            collected_health_packs = pygame.sprite.spritecollide(player, health_packs_group, True)
+            for health_pack in collected_health_packs:
+                health_pack.collect(player)
+
             if not self.death_animation_started:
                 if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
                     bomb_regular = Bombs(self.player, "regular", random.randint(0, width), 0)
@@ -317,11 +333,15 @@ class GameLoop:
 
             self.props_group.update(self.camera_x)
             self.props_group.draw(self.screen)
-            
+            health_packs_group.update(self.camera_x)
+
             for bomb in bombs_group:
                 bomb.update(self.camera_x)
                 self.screen.blit(bomb.image,
                                 (bomb.rect.x - self.camera_x, bomb.rect.y))
+
+            for health_pack in health_packs_group:
+                health_pack.draw(self.screen)
 
             for explosion in explosion_group:
                 explosion.update(self.camera_x)

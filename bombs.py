@@ -69,6 +69,39 @@ class Bombs(pygame.sprite.Sprite):
       bombs_group.add(explosion)
 
 
+class HealthPack(pygame.sprite.Sprite):
+
+    def __init__(self, x, y):
+      super().__init__()
+      self.image = pygame.image.load('image\health_pack.png').convert_alpha()
+      self.image = pygame.transform.scale(self.image, (60,60))
+      self.rect = self.image.get_rect()
+      self.rect.topleft = (x, y)
+      self.take = False
+      self.speed = 4
+
+    def draw(self, screen):
+      screen.blit(self.image, self.rect)
+
+    def random_health_pack(self):
+      health_pack_x = random.randint(0, width - self.rect.width)
+      health_pack_y = 0
+      health_pack = HealthPack(health_pack_x, health_pack_y)
+      all_sprites.add(health_pack)
+
+    def collect(self, player):
+      player.health += 0.5
+      if player.health > 1.0:
+        player.health = 1.0
+      self.kill()
+
+    def update(self, camera_x):
+      if not self.take:
+        self.rect.y += self.speed
+
+        if self.rect.bottom > height:
+          self.rect.bottom = height
+
 class Explosion(pygame.sprite.Sprite):
 
     def __init__(self, x, y, player, explosion_type):
