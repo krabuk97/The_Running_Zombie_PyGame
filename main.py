@@ -5,8 +5,10 @@ import sys
 from props import Props
 from gui import Gui
 from afterdeath import AfterDeath
-from bombs import Bombs, Explosion, HealthPack
+from bombs import Bombs, HealthPack
 from menu import Menu
+from explosion import Explosion
+
 
 pygame.init()
 
@@ -191,6 +193,7 @@ explosion_group = pygame.sprite.Group()
 
 health_packs_group = pygame.sprite.Group()
 
+
 class GameLoop:
     def __init__(self):
         pygame.init()
@@ -338,10 +341,8 @@ class GameLoop:
             for bomb in bombs_group:
                 bomb.update(self.camera_x)
 
-                # Check for collision between the bomb and the player
                 if bomb.rect.colliderect(player.rect):
-                    # Create an explosion
-                    explosion = Explosion(bomb.rect.x, bomb.rect.y)
+                    explosion = Explosion(bomb.rect.x, bomb.rect.y, player, bomb.bomb_type)
                     explosion_group.add(explosion)
 
                 self.screen.blit(bomb.image, (bomb.rect.x - self.camera_x, bomb.rect.y))
