@@ -337,15 +337,22 @@ class GameLoop:
 
             for bomb in bombs_group:
                 bomb.update(self.camera_x)
-                self.screen.blit(bomb.image,
-                                (bomb.rect.x - self.camera_x, bomb.rect.y))
+
+                # Check for collision between the bomb and the player
+                if bomb.rect.colliderect(player.rect):
+                    # Create an explosion
+                    explosion = Explosion(bomb.rect.x, bomb.rect.y)
+                    explosion_group.add(explosion)
+
+                self.screen.blit(bomb.image, (bomb.rect.x - self.camera_x, bomb.rect.y))
 
             for health_pack in health_packs_group:
                 health_pack.draw(self.screen)
 
             for explosion in explosion_group:
                 explosion.update(self.camera_x)
-            
+                explosion.draw(self.screen)
+
             self.all_sprites.update(self.camera_x)
             self.player.update(self.camera_x)
             self.gui.draw_health_bar()
