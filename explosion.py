@@ -1,6 +1,10 @@
 import pygame
 from LoadImage import LoadImage
 
+width, height = 1080, 720
+
+screen = pygame.display.set_mode((width, height))
+
 class Explosion(pygame.sprite.Sprite):
 
     def __init__(self, x, y, player, explosion_type):
@@ -13,7 +17,8 @@ class Explosion(pygame.sprite.Sprite):
         self.finished = False
         self.distance_threshold = 0
         self.damage_amount = 0
-
+        self.player.slow_start_x_velocity = self.player.jump_velocity
+        
         if explosion_type == "normal":
             self.images = [
                 pygame.image.load(image_path).convert_alpha()
@@ -47,6 +52,9 @@ class Explosion(pygame.sprite.Sprite):
             self.distance_threshold = 90
             self.damage_amount = 0
 
+        else:
+            self.images = []
+        
         self.image_index = 0
         self.image = self.images[self.image_index]
         self.rect = self.image.get_rect(center=(x, y))
@@ -93,4 +101,5 @@ class Explosion(pygame.sprite.Sprite):
                     self.player.slow_start_y_velocity = self.player.y_velocity
                     self.player.x_velocity = 0
 
-
+    def draw(self, screen, explosion_type, images):
+        screen.blit(self.image, self.rect)

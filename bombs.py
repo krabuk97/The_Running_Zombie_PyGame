@@ -73,7 +73,7 @@ class HealthPack(pygame.sprite.Sprite):
 
     def __init__(self, x, y):
       super().__init__()
-      self.image = pygame.image.load('image\health_pack.png').convert_alpha()
+      self.image = pygame.image.load('image/health_pack.png').convert_alpha()
       self.image = pygame.transform.scale(self.image, (60,60))
       self.rect = self.image.get_rect()
       self.rect.topleft = (x, y)

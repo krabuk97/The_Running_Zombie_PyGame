@@ -73,7 +73,8 @@ class Player(pygame.sprite.Sprite):
       self.burn = False
       self.frozen_duration = 0
       self.slow_duration = 0
-  
+
+    
     def update(self, camera_x):
       keys = pygame.key.get_pressed()
       any_key_pressed = any(keys)
@@ -352,11 +353,12 @@ class GameLoop:
 
             for explosion in explosion_group:
                 explosion.update(self.camera_x)
-                explosion.draw(self.screen)
+                explosion.draw(explosion_type, images)
 
             self.all_sprites.update(self.camera_x)
             self.player.update(self.camera_x)
             self.gui.draw_health_bar()
+            self.gui.draw_point_score()
             self.all_sprites.draw(self.screen)
             self.player.draw(self.screen)
             
