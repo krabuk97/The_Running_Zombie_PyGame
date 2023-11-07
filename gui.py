@@ -38,3 +38,4 @@ class Gui:
           self.player.score += 1
           self.time_passed = current_time
       return self.player.score
+
