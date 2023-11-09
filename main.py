@@ -2,11 +2,9 @@ import pygame
 from LoadImage import LoadImage
 import random
 import sys
-from props import Props
 from gui import Gui
 from afterdeath import AfterDeath
 from menu import Menu
-
 
 pygame.init()
 
@@ -19,6 +17,179 @@ white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
 
+class GameLoop:
+    def __init__(self):
+        pygame.init()
+
+        self.player = Player()
+        width, height = 1080, 720
+        self.screen = pygame.display.set_mode((width, height))
+        pygame.display.set_caption("The Running Zombie")
+        self.time_of_death = 0
+        self.game_state = "playing"
+        self.running = True
+        self.clock = pygame.time.Clock()
+        self.death_animation_started = False
+        self.death_animation_duration = 800
+        self.death_animation_start_time = 0
+        self.death_screen_duration = 1000
+        self.death_screen_start_time = 1000
+        self.bombs_group = pygame.sprite.Group()
+        self.gui = Gui(self.player)
+        self.camera_x = 0
+        self.menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button, LoadImage.restart_button)
+        self.score_to_change_background1 = 200
+        
+        bombs_group = pygame.sprite.Group()
+        self.bombs_group = bombs_group
+
+        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites.add(self.player)
+
+        self.last_bomb_spawn_time = pygame.time.get_ticks()
+        self.bomb_spawn_delay = random.randint(2500, 4000)
+        self.last_nuke_spawn_time = pygame.time.get_ticks()
+        self.nuke_spawn_delay = random.randint(4000, 7000)
+        self.last_frozen_spawn_time = pygame.time.get_ticks()
+        self.frozen_spawn_delay = random.randint(4000, 7000)
+
+        health_packs_group = pygame.sprite.Group()
+        self.health_packs_group = health_packs_group
+
+        def start_game(self):
+            self.player = Player()
+            self.gui = Gui(self.player)
+            self.bombs_group = pygame.sprite.Group()
+            self.health_packs_group = pygame.sprite.Group()
+            self.all_sprites = pygame.sprite.Group()
+            self.all_sprites.add(self.player)
+            self.last_bomb_spawn_time = pygame.time.get_ticks()
+            self.bomb_spawn_delay = random.randint(2500, 4000)
+            self.last_nuke_spawn_time = pygame.time.get_ticks()
+            self.nuke_spawn_delay = random.randint(4000, 7000)
+            self.last_frozen_spawn_time = pygame.time.get_ticks()
+            self.frozen_spawn_delay = random.randint(4000, 7000)
+            self.game_state = "playing"
+
+        def run(self):
+            while self.running:
+                self.handle_events()
+
+                if self.game_state == "menu":
+                    selected_action = self.menu.handle_events()
+                    if selected_action == "start":
+                        self.start_game()
+                    elif selected_action == "exit":
+                        self.running = False
+
+                if self.game_state == "playing":
+                    self.update_game()
+                    self.draw_game()
+                elif self.game_state == "death_animation":
+                    self.death_animation()
+                elif self.game_state == "death_screen":
+                    self.death_screen()
+
+                if player.score == score_to_change_background:
+                    background1 = pygame.transform.scale(pygame.image.load("image/farm_d.jpeg").convert_alpha(), (1080, 720))
+
+            if random.random() < 0.02:
+                health_pack = HealthPack(random.randint(0, width - 30), 0)
+                self.all_sprites.add(health_pack)
+                health_packs_group.add(health_pack)
+
+            for health_pack in health_packs_group:
+                health_pack.update(self.camera_x)
+                if health_pack.rect.top > height:
+                    health_pack.kill()
+
+            collected_health_packs = pygame.sprite.spritecollide(player, health_packs_group, True)
+            for health_pack in collected_health_packs:
+                health_pack.collect(player)
+
+            if not self.death_animation_started:
+                if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
+                    bomb_regular = Bombs(self.player, "regular", random.randint(0, width), 0)
+                    self.all_sprites.add(bomb_regular)
+                    bombs_group.add(bomb_regular)  
+                    self.last_bomb_spawn_time = current_time
+                    self.bomb_spawn_delay = random.randint(2500, 4000)
+
+            if current_time - self.last_nuke_spawn_time >= self.nuke_spawn_delay:
+                bomb_nuke = Bombs(self.player, "nuke", random.randint(0, width), 0)
+                self.all_sprites.add(bomb_nuke)
+                bombs_group.add(bomb_nuke)  
+                self.last_nuke_spawn_time = current_time
+                self.nuke_spawn_delay = random.randint(4000, 7000)
+
+            if current_time - self.last_frozen_spawn_time >= self.frozen_spawn_delay:
+                bomb_frozen = Bombs(self.player, "frozen", random.randint(0, width), 0)
+                self.all_sprites.add(bomb_frozen)
+                bombs_group.add(bomb_frozen)  
+                self.last_frozen_spawn_time = current_time
+                self.frozen_spawn_delay = random.randint(5000, 8000)
+
+            self.camera_x = max(
+                0,
+                min(int(self.player.rect.x - (width // 2)),
+                    int(background1.get_width() - width))
+            )
+            self.screen.blit(background1, (-self.camera_x, 0))
+
+            if self.death_animation_started:
+                if current_time - self.death_animation_start_time >= self.death_animation_duration:
+                    self.running = False
+
+            health_packs_group.update(self.camera_x)
+
+            for explosion in explosion_group:
+                explosion.update(self.camera_x)
+                explosion.draw(screen)
+
+            for bomb in bombs_group:
+                bomb.update(self.camera_x)
+                if bomb.rect.colliderect(player.rect):
+                    explosion = Explosion(bomb.rect.centerx, bomb.rect.bottom, self.player, bomb.bomb_type)
+                self.screen.blit(bomb.image, (bomb.rect.x - self.camera_x, bomb.rect.y))
+
+            for health_pack in health_packs_group:
+                health_pack.draw(self.screen)
+
+            self.all_sprites.update(self.camera_x)
+            self.player.update(self.camera_x)
+            self.gui.draw_health_bar()
+            self.gui.draw_point_score(screen)
+            self.all_sprites.draw(self.screen)
+            self.player.draw(self.screen)
+
+            pygame.display.flip()
+            self.clock.tick(60)
+
+        if not self.running:
+            self.screen.blit(death_screen, (0, 0))
+            pygame.display.flip()
+            pygame.time.delay(3000)
+            pygame.quit()
+            sys.exit()
+
+        def death_animation(self):
+            current_time = pygame.time.get_ticks()
+            if current_time - self.time_of_death >= self.death_animation_duration:
+                self.game_state = "death_screen"
+
+        def death_screen(self):
+            after_death = AfterDeath(self.screen, LoadImage.death_screen, LoadImage.restart_button, LoadImage.exit_button)
+            selected_action = after_death.run()
+            if selected_action == "restart":
+                self.start_game()
+            elif selected_action == "exit":
+                self.running = False
+
+        def handle_events(self):
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+        
 class Player(pygame.sprite.Sprite):
 
     def __init__(self):
@@ -169,9 +340,6 @@ class Player(pygame.sprite.Sprite):
     
     def draw(self, screen):
         screen.blit(self.image, self.rect)
-        
-
-menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button, LoadImage.restart_button)
 
 while True:
     selected_action = menu.handle_events()
@@ -259,6 +427,7 @@ class HealthPack(pygame.sprite.Sprite):
 
     def __init__(self, x, y):
         super().__init__()
+        self.all_sprites = all_sprites
         self.image = pygame.image.load('image/health_pack.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (60, 60))
         self.rect = self.image.get_rect()
@@ -272,7 +441,7 @@ class HealthPack(pygame.sprite.Sprite):
     def random_health_pack(self):
         health_pack_x = random.randint(0, width - self.rect.width)
         health_pack_y = 0
-        health_pack = HealthPack(health_pack_x, health_pack_y)
+        health_pack = HealthPack(health_pack_x, health_pack_y, self.all_sprites)
         self.all_sprites.add(health_pack)
 
     def collect(self, player):
@@ -377,199 +546,8 @@ class Explosion(pygame.sprite.Sprite):
                     self.player.slow_counter = 0
                     self.player.slow_start_x = self.player.rect.centerx
                     self.player.slow_start_y = self.player.rect.centery
-
-
-class GameLoop:
-    def __init__(self):
-        pygame.init()
-
-        self.player = Player()
-        width, height = 1080, 720
-        self.screen = pygame.display.set_mode((width, height))
-        pygame.display.set_caption("The Running Zombie")
-        self.time_of_death = 0
-        self.game_state = "playing"
-        self.running = True
-        self.clock = pygame.time.Clock()
-        self.death_animation_started = False
-        self.death_animation_duration = 800
-        self.death_animation_start_time = 0
-        self.death_screen_duration = 1000
-        self.death_screen_start_time = 1000
-        self.bombs_group = pygame.sprite.Group()
-        self.gui = Gui(self.player)
-        self.camera_x = 0
-
-        bombs_group = pygame.sprite.Group()
-        self.bombs_group = bombs_group
-
-        self.props_group = pygame.sprite.Group()
-        self.prop_images = ["half_car.png", "moon_cross.png"]
-
-        prop = Props(70, 650, "half_car", "right", self.camera_x)
-        prop2 = Props(500, 410, "moon_cross", "left", self.camera_x)
-        self.props_group.add(prop, prop2)
-
-        self.all_sprites = pygame.sprite.Group()
-        self.all_sprites.add(self.player)
-        self.all_sprites.add(prop, prop2)
-
-        self.last_bomb_spawn_time = pygame.time.get_ticks()
-        self.bomb_spawn_delay = random.randint(2500, 4000)
-        self.last_nuke_spawn_time = pygame.time.get_ticks()
-        self.nuke_spawn_delay = random.randint(4000, 7000)
-        self.last_frozen_spawn_time = pygame.time.get_ticks()
-        self.frozen_spawn_delay = random.randint(4000, 7000)
-
-        # Create a group to store health packs
-        health_packs_group = pygame.sprite.Group()
-        self.health_packs_group = health_packs_group
-
-        pygame.sprite.Group()
-        prop = Props(70, 650, "half_car", "right", self.camera_x)
-        prop2 = Props(500, 410, "moon_cross", "left", self.camera_x)
-        self.props_group.add(prop, prop2)
-        self.all_sprites.add(prop, prop2)
-
-        self.player = Player()
-
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-
-    def restart_game(self):
-        self.game_state = "playing"
-        self.player = Player()
-        self.gui = Gui(self.player)
-        self.camera_x = 0
-        self.all_sprites.empty()
-        self.all_sprites.add(self.player)
-        self.bombs_group.empty()
-        self.last_bomb_spawn_time = pygame.time.get_ticks()
-        self.bomb_spawn_delay = random.randint(2500, 4000)
-        self.last_nuke_spawn_time = pygame.time.get_ticks()
-        self.nuke_spawn_delay = random.randint(4000, 7000)
-        self.last_frozen_spawn_time = pygame.time.get_ticks()
-        self.frozen_spawn_delay = random.randint(4000, 7000)
-
-    def run(self):
-        after_death = AfterDeath(self.screen, death_screen, LoadImage.restart_button, LoadImage.exit_button)
-
-        while self.running:
-            self.handle_events()
-            current_time = pygame.time.get_ticks()
-
-            if not self.death_animation_started:
-                if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
-                    bomb_regular = Bombs(self.player, "regular", random.randint(0, width), 0)
-                    self.all_sprites.add(bomb_regular)
-                    self.bombs_group.add(bomb_regular)  # Add the bomb to the bombs_group
-                    self.last_bomb_spawn_time = current_time
-                    self.bomb_spawn_delay = random.randint(2500, 4000)
-
-            if self.game_state == "playing":
-                if self.player.health <= 0:
-                    self.game_state = "death_animation"
-                    self.death_animation_start_time = current_time
-                    self.player.animate()
-
-            elif self.game_state == "death_animation":
-                if current_time - self.death_animation_start_time >= self.death_animation_duration:
-                    self.game_state = "death_screen"
-                    self.player.animate()
-
-            elif self.game_state == "death_screen":
-                selected_action = after_death.run()
-                if selected_action == "restart":
-                    self.restart_game()
-                elif selected_action == "exit":
-                    self.running = False
-                    sys.exit()
-
-            if random.random() < 0.02:
-                health_pack = HealthPack(random.randint(0, width - 30), 0)
-                self.all_sprites.add(health_pack)
-                health_packs_group.add(health_pack)
-
-            for health_pack in health_packs_group:
-                health_pack.update(self.camera_x)
-                if health_pack.rect.top > height:
-                    health_pack.kill()
-
-            collected_health_packs = pygame.sprite.spritecollide(player, health_packs_group, True)
-            for health_pack in collected_health_packs:
-                health_pack.collect(player)
-
-            if not self.death_animation_started:
-                if current_time - self.last_bomb_spawn_time >= self.bomb_spawn_delay:
-                    bomb_regular = Bombs(self.player, "regular", random.randint(0, width), 0)
-                    self.all_sprites.add(bomb_regular)
-                    bombs_group.add(bomb_regular)  # Add the bomb to the bombs_group
-                    self.last_bomb_spawn_time = current_time
-                    self.bomb_spawn_delay = random.randint(2500, 4000)
-
-            if current_time - self.last_nuke_spawn_time >= self.nuke_spawn_delay:
-                bomb_nuke = Bombs(self.player, "nuke", random.randint(0, width), 0)
-                self.all_sprites.add(bomb_nuke)
-                bombs_group.add(bomb_nuke)  # Add the bomb to the bombs_group
-                self.last_nuke_spawn_time = current_time
-                self.nuke_spawn_delay = random.randint(4000, 7000)
-
-            if current_time - self.last_frozen_spawn_time >= self.frozen_spawn_delay:
-                bomb_frozen = Bombs(self.player, "frozen", random.randint(0, width), 0)
-                self.all_sprites.add(bomb_frozen)
-                bombs_group.add(bomb_frozen)  # Add the bomb to the bombs_group
-                self.last_frozen_spawn_time = current_time
-                self.frozen_spawn_delay = random.randint(5000, 8000)
-
-            self.camera_x = max(
-                0,
-                min(int(self.player.rect.x - (width // 2)),
-                    int(background1.get_width() - width)))
-            self.screen.blit(background1, (-self.camera_x, 0))
-
-            if self.death_animation_started:
-                if current_time - self.death_animation_start_time >= self.death_animation_duration:
-                    self.running = False
-
-            self.props_group.update(self.camera_x)
-            self.props_group.draw(self.screen)
-            health_packs_group.update(self.camera_x)
-
-            for explosion in explosion_group:
-                explosion.update(self.camera_x)
-                explosion.draw(screen)
-
-            for bomb in bombs_group:
-                bomb.update(self.camera_x)
-                if bomb.rect.colliderect(player.rect):
-                    explosion = Explosion(bomb.rect.centerx, bomb.rect.bottom, player)
-                    explosion_group.add(explosion)
-
-                self.screen.blit(bomb.image, (bomb.rect.x - self.camera_x, bomb.rect.y))
-
-            for health_pack in health_packs_group:
-                health_pack.draw(self.screen)
-
-            self.all_sprites.update(self.camera_x)
-            self.player.update(self.camera_x)
-            self.gui.draw_health_bar()
-            self.gui.draw_point_score(screen)
-            self.all_sprites.draw(self.screen)
-            self.player.draw(self.screen)
-
-            pygame.display.flip()
-            self.clock.tick(60)
-
-        if not self.running:
-            self.screen.blit(death_screen, (0, 0))
-            pygame.display.flip()
-            pygame.time.delay(3000)
-            pygame.quit()
-            sys.exit()
+                    
 
 if __name__ == "__main__":
-    game_loop = GameLoop()
-    game_loop.run()
-    
+game_loop = GameLoop()
+game_loop.run()

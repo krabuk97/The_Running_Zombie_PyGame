@@ -17,6 +17,9 @@ raypy = "^0.0.3"
 django-tango = "^0.10.0"
 opencv-python = "^4.8.1"
 pyinstaller = "^6.1.0"
+Menu = "^3.2.2"
+props = "^0.0.3"
+pysme-astro = "^5.74.9"
 
 [tool.poetry.dev-dependencies]
 debugpy = "^1.6.2"
