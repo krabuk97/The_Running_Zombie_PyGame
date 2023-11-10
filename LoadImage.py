@@ -106,3 +106,5 @@ class LoadImage:
         r'image/frozen/fb11.png',
         r'image/frozen/fb12.png',
     ]
+
+    fire_bomb = ["path/to/fire.gif"]
