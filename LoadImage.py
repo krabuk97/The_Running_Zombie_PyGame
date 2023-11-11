@@ -108,3 +108,5 @@ class LoadImage:
     ]
 
     fire_bomb = ["path/to/fire.gif"]
+
+    poison_bomb = ['image/frozen/fb12.png']

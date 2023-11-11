@@ -118,7 +118,7 @@ class Player(pygame.sprite.Sprite):
         if self.frozen:
             self.handle_frozen()
 
-        if self.poinsoned:
+        if self.poisoned:
             self.handle_poisoned()
 
         if self.burn:
@@ -199,9 +199,7 @@ health_packs_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
 
-
 class Bombs(pygame.sprite.Sprite):
-
     def __init__(self, player, bomb_type, x, y):
         super().__init__()
 
@@ -211,9 +209,9 @@ class Bombs(pygame.sprite.Sprite):
             self.image = pygame.image.load("image/bomb_reg.png").convert_alpha()
         elif bomb_type == "frozen":
             self.image = pygame.image.load("image/frozen_bomb.png").convert_alpha()
-        elif self.image == "fire":
+        elif bomb_type == "fire":  # Fixed the condition here
             self.image = pygame.image.load("image/bomb_fire.png").convert_alpha()
-        elif self.image == "poison":
+        elif bomb_type == "poison":  # Fixed the condition here
             self.image = pygame.image.load("image/poison_bomb.png").convert_alpha()
 
         self.image = pygame.transform.scale(self.image, (60, 60))
@@ -258,9 +256,9 @@ class Bombs(pygame.sprite.Sprite):
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "frozen")
             explosion_group.add(explosion)
 
-        if self.bom_type == "fire":
+        if self.bomb_type == "fire":
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "fire")
-            eplsion_group.add(explosion)
+            explosion_group.add(explosion)
 
         if self.bomb_type == "poison":
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "poison")
@@ -352,14 +350,30 @@ class Explosion(pygame.sprite.Sprite):
             self.distance_threshold = 90
             self.damage_amount = 0
 
-        elif explosion_type == "fire":
-            self.images = self.load_gif_frames(LoadImage.fire_bomb[0])  # Assuming the first frame path represents the GIF
-            self.images = [pygame.transform.scale(image, (150, 150)) for image in self.images]
+        elif explosion_type == "poison":  # Add this section
+
+            self.images = [
+
+                pygame.image.load(image_path).convert_alpha()
+
+                for image_path in LoadImage.poison_bomb
+
+            ]
+
+            self.images = [
+
+                pygame.transform.scale(image, (150, 150)) for image in self.images
+
+            ]
+
             self.distance_threshold = 90
-            self.damage_amount = 5
+
+            self.damage_amount = 0
 
         self.image_index = 0
+
         self.rect = self.images[0].get_rect(center=(x, y))
+
         self.image = self.images[self.image_index]
 
     def load_gif_frames(self, gif_path):
@@ -403,18 +417,17 @@ class Explosion(pygame.sprite.Sprite):
             player_center_x = player_rect.centerx
             player_bottom = player_rect.bottom
 
-            if (player_center_x - self.rect.centerx) ** 2 + (
-                    player_bottom - self.rect.bottom) ** 2 <= self.distance_threshold ** 2:
+            distance_squared = (player_center_x - self.rect.centerx) ** 2 + (player_bottom - self.rect.bottom) ** 2
+
+            if distance_squared <= self.distance_threshold ** 2:
                 if self.explosion_type == "frozen":
                     self.player.frozen = True
                     self.player.frozen_duration = 0
-                elif:
-                    self.explosion_type == "poison"
+                elif self.explosion_type == "poison":  # Fixed syntax
                     self.player.poisoned = True
                     self.player.poison_duration = 0
-                elif:
-                    self.explosion_type == "fire":
-                    self.palyer.burn = True
+                elif self.explosion_type == "fire":  # Fixed syntax
+                    self.player.burn = True
                     self.player.burn_duration = 0
                 else:
                     self.player.health -= self.damage_amount
@@ -423,7 +436,7 @@ class Explosion(pygame.sprite.Sprite):
                     self.player.slow_counter = 0
                     self.player.slow_start_x = self.player.rect.centerx
                     self.player.slow_start_y = self.player.rect.centery
-                
+
 
 class GameLoop:
     def __init__(self):
@@ -451,7 +464,7 @@ class GameLoop:
         self.running = True
         self.clock = pygame.time.Clock()
         self.camera_x = 0
-        self.score_to_change_background1 = 10
+        self.score_to_change_background1 = 3
         self.death_animation_duration = 5000
         self.death_animation_start_time = 3000
         
@@ -503,7 +516,7 @@ class GameLoop:
         current_time = pygame.time.get_ticks()
 
         if self.player.score == self.score_to_change_background1:
-            self.screen.blit(self.background2, (-self.camera_x, 0))
+            self.screen.blit(self.background3, (-self.camera_x, 0))
 
         if current_time - self.last_health_pack_time >= self.health_pack_interval:
             if random.random() < 0.02:
@@ -550,12 +563,12 @@ class GameLoop:
             self.last_fire_spawn_time = pygame.time.get_ticks()
             self.fire_spawn_delay = random.randint(5000, 8000)
 
-        if pygame.time.get_ticks() - self.last_poisson_spawn_time >= self.poisson_spawn_delay:
-            bomb_poisson = Bombs(self.player, "poison", random.randint(0, width), 0)
-            self.all_sprites.add(bomb_poisson)
-            self.bombs_group.add(bomb_poisson)
-            self.last_poisson_spawn_time = pygame.time.get_ticks()
-            self.poisson_spawn_delay = random.randint(5000, 8000)
+        if pygame.time.get_ticks() - self.last_poison_spawn_time >= self.poison_spawn_delay:
+            bomb_poison = Bombs(self.player, "poison", random.randint(0, width), 0)
+            self.all_sprites.add(bomb_poison)
+            self.bombs_group.add(bomb_poison)
+            self.last_poison_spawn_time = pygame.time.get_ticks()
+            self.poison_spawn_delay = random.randint(5000, 8000)
 
         self.camera_x = max(
             0,
