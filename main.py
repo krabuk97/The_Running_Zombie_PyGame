@@ -2,6 +2,7 @@ import pygame
 import random
 import sys
 import imageio
+from pygame.locals import *
 from LoadImage import LoadImage
 from gui import Gui
 from afterdeath import AfterDeath
@@ -271,14 +272,12 @@ class HealthPack(pygame.sprite.Sprite):
 
     def __init__(self, x, y):
         super().__init__()
-        self.all_sprites = all_sprites
         self.image = pygame.image.load('image/health_pack.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (60, 60))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
         self.take = False
         self.speed = 4
-        
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -316,6 +315,7 @@ class Explosion(pygame.sprite.Sprite):
         self.finished = False
         self.distance_threshold = 0
         self.damage_amount = 0
+        self.images = []
 
         if explosion_type == "normal":
             self.images = [
@@ -350,7 +350,8 @@ class Explosion(pygame.sprite.Sprite):
             self.distance_threshold = 90
             self.damage_amount = 0
 
-        elif explosion_type == "poison":  # Add this section
+
+        elif explosion_type == "poison":
 
             self.images = [
 
@@ -372,9 +373,13 @@ class Explosion(pygame.sprite.Sprite):
 
         self.image_index = 0
 
-        self.rect = self.images[0].get_rect(center=(x, y))
-
-        self.image = self.images[self.image_index]
+        if self.images and len(self.images) > 0:  # Dodano warunek sprawdzający długość listy
+            self.rect = self.images[0].get_rect(center=(x, y))
+            self.image = self.images[self.image_index]
+        else:
+            # Obsługa sytuacji, gdy self.images jest puste
+            self.rect = pygame.Rect(x, y, 0, 0)
+            self.image = pygame.Surface((0, 0))
 
     def load_gif_frames(self, gif_path):
         images = []
@@ -467,10 +472,10 @@ class GameLoop:
         self.score_to_change_background1 = 3
         self.death_animation_duration = 5000
         self.death_animation_start_time = 3000
-        
-
-        # Ustawienie początkowego stanu gry
+        self.background_changed = False
+        self.score_to_change_background1 = 10
         self.start_game()
+        self.time_of_death = 0
 
     def start_game(self):
         # Resetowanie obiektów gry przy rozpoczęciu nowej gry
@@ -509,11 +514,31 @@ class GameLoop:
             elif self.game_state == "death_screen":
                 self.death_screen()
 
+    def change_background(self):
+        backgrounds = [self.background1, self.background2, self.background3, self.background4, self.background5,
+                       self.background6, self.background7, self.background8]
+
+        self.background_changed = False
+
+        current_background_index = backgrounds.index(self.background1)
+        new_background_index = (current_background_index + 1) % len(backgrounds)
+        self.background1 = backgrounds[new_background_index]
+        for i in range(1, len(backgrounds)):
+            index = (new_background_index + i) % len(backgrounds)
+            setattr(self, f'background{i + 1}', backgrounds[index])
+
+        self.camera_x = 0
+
     def play_game(self):
-        # Kod gry
         self.update_game()
         self.draw_game()
         current_time = pygame.time.get_ticks()
+
+        if self.player.score % 10 == 0 and self.player.score > 0 and not self.background_changed:
+            self.change_background()
+            self.background_changed = True
+        elif self.player.score % 10 != 0:
+            self.background_changed = False
 
         if self.player.score == self.score_to_change_background1:
             self.screen.blit(self.background3, (-self.camera_x, 0))
@@ -524,6 +549,10 @@ class GameLoop:
                 self.all_sprites.add(health_pack)
                 self.health_packs_group.add(health_pack)
                 self.last_health_pack_time = current_time
+
+        if self.player.health <= 0:
+            self.player.is_dying = True
+            self.time_of_death = pygame.time.get_ticks()
 
         for health_pack in self.health_packs_group:
             health_pack.update(self.camera_x)
@@ -577,6 +606,7 @@ class GameLoop:
         )
         self.screen.blit(self.background1, (-self.camera_x, 0))
 
+
         if self.death_animation_started:
             if pygame.time.get_ticks() - self.death_animation_start_time >= self.death_animation_duration:
                 self.running = False
@@ -584,12 +614,14 @@ class GameLoop:
         self.health_packs_group.update(self.camera_x)
 
         for explosion in explosion_group:
-            self.screen.blit(explosion.image, (explosion.rect.x - self.camera_x, explosion.rect.y))
+            explosion.update(self.camera_x)
+            explosion.draw(self.screen)
 
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
             if bomb.rect.colliderect(self.player.rect):
-                bomb.explode(explosion_group)
+                explosion = Explosion(bomb.rect.centerx, bomb.rect.bottom, self.player, bomb.bomb_type)
+                explosion_group.add(explosion)
             self.screen.blit(bomb.image, (bomb.rect.x - self.camera_x, bomb.rect.y))
 
         self.health_packs_group.draw(self.screen)
@@ -644,6 +676,17 @@ class GameLoop:
 
         pygame.display.flip()
         self.clock.tick(60)
+
+    def handle_death(self):
+        if self.player.health <= 0:
+            self.player.is_dying = True
+            self.time_of_death = pygame.time.get_ticks()
+
+        if self.player.is_dying and not self.death_animation_started:
+            self.death_animation_started = True
+            explosion = Explosion(self.player.rect.centerx, self.player.rect.bottom, self.player, "death")
+            explosion_group.add(explosion)
+            self.game_state = "death_animation"
 
     def death_animation(self):
         current_time = pygame.time.get_ticks()

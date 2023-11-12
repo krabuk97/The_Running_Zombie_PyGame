@@ -1,6 +1,6 @@
 import pygame
 from LoadImage import LoadImage
-
+import sys
 
 width, height = 1080, 720
 screen = pygame.display.set_mode((width, height))
