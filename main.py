@@ -1,10 +1,11 @@
-import pygame
 import random
 import sys
-from pygame.locals import *
+
+import pygame
+
 from LoadImage import LoadImage
-from gui import Gui
 from afterdeath import AfterDeath
+from gui import Gui
 from menu import Menu
 
 pygame.init()
@@ -24,6 +25,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
 
         # Ładowanie i skalowanie obrazów
+        self.score = 0
         self.walk_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (100, 100))
                             for filename in LoadImage.playerwalk]
         self.death_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (100, 100))
@@ -180,7 +182,8 @@ class Player(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
-menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button, LoadImage.restart_button)
+
+menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 
 while True:
     selected_action = menu_instance.handle_events()
@@ -189,7 +192,7 @@ while True:
     menu_instance.draw()
     pygame.display.flip()
 
-menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button, LoadImage.restart_button)
+menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 player = Player()
 gui = Gui(player)
 
@@ -209,80 +212,73 @@ class Bombs(pygame.sprite.Sprite):
     def __init__(self, player, bomb_type, x, y):
         super().__init__()
 
+        self.player = player
+        self.bomb_type = bomb_type
+        self.explosion_type = None
+        self.exploded = False
+
+        # Load images based on bomb_type
         if bomb_type == "nuke":
             self.image = pygame.image.load("image/bomb_nuke.png").convert_alpha()
-            self.image = pygame.transform.scale(self.image, (60, 60))
         elif bomb_type == "regular":
             self.image = pygame.image.load("image/bomb_reg.png").convert_alpha()
-            self.image = pygame.transform.scale(self.image, (60, 60))
         elif bomb_type == "frozen":
             self.image = pygame.image.load("image/frozen_bomb.png").convert_alpha()
-            self.image = pygame.transform.scale(self.image, (60, 60))
         elif bomb_type == "fire":
             self.image = pygame.image.load("image/bomb_fire.png").convert_alpha()
-            self.image = pygame.transform.scale(self.image, (60, 60))
         elif bomb_type == "poison":
             self.image = pygame.image.load("image/poison_bomb.png").convert_alpha()
-            self.image = pygame.transform.scale(self.image, (60, 60))
 
+        self.image = pygame.transform.scale(self.image, (60, 60))
         self.rect = self.image.get_rect()
         self.rect.x = random.randint(0, width - self.rect.width)
         self.rect.y = random.randint(-100, -40)
         self.speed = random.randint(1, 5)
-        self.player = player
-        self.bomb_type = random.choice(["regular", "nuke", "frozen", "poison", "burn"])
-        self.explosion_type = None
 
     def create_explosion(self, explosion_type):
-        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
-        explosion_group.add(explosion)
+        if explosion_type is not None:
+            explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
+            explosion_group.add(explosion)
 
     def update(self, camera_x):
-        self.rect.y += self.speed
-        if self.rect.top > height + 10 or self.rect.left < -25 or self.rect.right > width + 20:
-            self.rect.x = random.randint(0, width - self.rect.width)
-            self.rect.y = random.randint(-100, -40)
-            self.speed = random.randint(1, 5)
-            self.bomb_type = random.choice(["regular", "nuke", "frozen", "poison", "burn"])
+        if not self.exploded:
+            self.rect.y += self.speed
 
-        # Always create an explosion when a bomb updates
-        self.create_explosion(self.explosion_type)
+            if self.rect.bottom >= height:
+                self.exploded = True
+                self.explode()
 
-        if pygame.sprite.spritecollide(self.player, bombs_group, True):
-            if self.bomb_type == "regular":
-                self.explosion_type = "normal"
-            elif self.bomb_type == "nuke":
-                self.explosion_type = "nuke"
-            elif self.bomb_type == "frozen":
-                self.explosion_type = "frozen"
-            elif self.bomb_type == "poison":
-                self.explosion_type = "poison"
-            elif self.bomb_type == "fire":
-                self.explosion_type = "burn"
+            if self.rect.bottom > height:
+                self.rect.bottom = height
 
-            self.create_explosion(self.explosion_type)
+    def reset_bomb(self):
+        self.rect.x = random.randint(0, width - self.rect.width)
+        self.rect.y = random.randint(-100, -40)
+        self.speed = random.randint(1, 5)
 
     def explode(self):
+        # Determine explosion type based on bomb type
         explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
+
+        # Create the explosion
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
         explosion_group.add(explosion)
 
+        # Additional explosions based on bomb type
         if self.bomb_type == "regular":
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "normal")
             explosion_group.add(explosion)
-
-        if self.bomb_type == "frozen":
+        elif self.bomb_type == "frozen":
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "frozen")
             explosion_group.add(explosion)
-
-        if self.bomb_type == "fire":
+        elif self.bomb_type == "fire":
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "burn")
             explosion_group.add(explosion)
-
-        if self.bomb_type == "poison":
+        elif self.bomb_type == "poison":
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "poison")
             explosion_group.add(explosion)
 
+        # Remove the bomb
         self.kill()
 
 
@@ -296,6 +292,7 @@ class HealthPack(pygame.sprite.Sprite):
         self.rect.topleft = (x, y)
         self.take = False
         self.speed = 4
+        self.all_sprites = pygame.sprite.Group()
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -303,7 +300,7 @@ class HealthPack(pygame.sprite.Sprite):
     def random_health_pack(self):
         health_pack_x = random.randint(0, width - self.rect.width)
         health_pack_y = 0
-        health_pack = HealthPack(health_pack_x, health_pack_y)
+        health_pack = HealthPack(health_pack_x, health_pack_y, self.all_sprites)
         self.all_sprites.add(health_pack)
 
     def collect(self, player):
@@ -314,11 +311,18 @@ class HealthPack(pygame.sprite.Sprite):
             self.take = True
 
     def update(self, camera_x):
-        if not self.take:
+        if self.take:
+            self.kill()
+        else:
             self.rect.y += self.speed
 
             if self.rect.bottom > height:
                 self.rect.bottom = height
+
+            hits = pygame.sprite.spritecollide(self, self.all_sprites, False)
+            for hit in hits:
+                if not self.take and isinstance(hit, Player):
+                    self.collect(hit)
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -334,66 +338,45 @@ class Explosion(pygame.sprite.Sprite):
         self.distance_threshold = 0
         self.damage_amount = 0
         self.images = []
+        self.camera_x = 0
 
-        if explosion_type == "normal":
-            self.images = [
-                pygame.image.load(image_path).convert_alpha()
-                for image_path in LoadImage.explosion_files
-            ]
-            self.images = [
-                pygame.transform.scale(image, (150, 150)) for image in self.images
-            ]
+        if explosion_type == "normal" or explosion_type == "regular":
+            explosion_images = LoadImage.explosion_files
+            size = (150, 150)
             self.distance_threshold = 90
             self.damage_amount = 5
 
         elif explosion_type == "nuke":
-            self.images = [
-                pygame.image.load(image_path).convert_alpha()
-                for image_path in LoadImage.nuke
-            ]
-            self.images = [
-                pygame.transform.scale(image, (300, 300)) for image in self.images
-            ]
+            explosion_images = LoadImage.nuke
+            size = (300, 300)
             self.distance_threshold = 250
             self.damage_amount = 50
 
         elif explosion_type == "frozen":
-            self.images = [
-                pygame.image.load(image_path).convert_alpha()
-                for image_path in LoadImage.frozen_bomb
-            ]
-            self.images = [
-                pygame.transform.scale(image, (150, 150)) for image in self.images
-            ]
+            explosion_images = LoadImage.frozen_bomb
+            size = (150, 150)
             self.distance_threshold = 90
             self.damage_amount = 0
 
         elif explosion_type == "poison":
-            self.images = [
-                pygame.image.load(image_path).convert_alpha()
-                for image_path in LoadImage.poison_bomb
-            ]
-            self.images = [
-                pygame.transform.scale(image, (150, 150)) for image in self.images
-            ]
+            explosion_images = LoadImage.poison_bomb
+            size = (150, 150)
             self.distance_threshold = 90
             self.damage_amount = 0
 
-        elif explosion_type == "burn":
-            self.images = [
-                pygame.image.load(image_path).convert_alpha()
-                for image_path in LoadImage.burn
-            ]
-            self.images = [
-                pygame.transform.scale(image, (150, 150)) for image in self.images
-            ]
+        elif explosion_type == "burn" or explosion_type == "fire":
+            explosion_images = LoadImage.burn
+            size = (150, 150)
             self.distance_threshold = 90
             self.damage_amount = 0
 
         else:
             raise ValueError(f"Unknown explosion_type: {explosion_type}")
-            
-            self.images = []  # You might want to provide a default value here
+
+        self.images = [
+            pygame.transform.scale(pygame.image.load(image_path).convert_alpha(), size)
+            for image_path in explosion_images
+        ]
 
         self.image_index = 0
 
@@ -415,13 +398,22 @@ class Explosion(pygame.sprite.Sprite):
         if self.animation_counter < len(self.images):
             self.image = self.images[self.animation_counter]
 
+        if self.rect.bottom > height:
+            self.rect.bottom = height
+
         if self.rect.bottom < height and self.animation_counter >= len(self.images) - 1 and not self.finished:
             self.finished = True
             self.handle_collisions()
             self.kill()
 
+        if self.finished and self.rect.bottom >= height:
+            self.kill()
+
     def draw(self, screen):
-        screen.blit(self.image, (self.rect.x - game_loop.camera_x, self.rect.y))
+        if not self.finished:
+            screen.blit(self.image, (self.rect.x - self.camera_x, self.rect.y))
+        else:
+            self.kill()
 
     def handle_collisions(self):
         if self.player:
@@ -435,7 +427,7 @@ class Explosion(pygame.sprite.Sprite):
                 if self.explosion_type == "normal":
                     self.player.health -= self.damage_amount
                     self.damage_amount = 10
-                elif self.explotsion_type == "nuke":
+                elif self.explosion_type == "nuke":
                     self.player.health -= self.damage_amount
                     self.damage_amount = 50
                 elif self.explosion_type == "frozen":
@@ -452,9 +444,6 @@ class Explosion(pygame.sprite.Sprite):
                     self.player.slow_duration = 420
                     self.player.slow_start_time = pygame.time.get_ticks()
                     self.player.slow_counter = 0
-                    self.player.slow_start_x = self.player.rect.centerx
-                    self.player.slow_start_y = self.player.rect.centery
-
 
 class GameLoop:
     def __init__(self):
@@ -463,12 +452,13 @@ class GameLoop:
         pygame.display.set_caption("The Running Zombie")
         self.player = Player()
         self.gui = Gui(self.player)
-        self.menu = Menu(self.screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button,
-                          LoadImage.restart_button)
-        self.background1 = pygame.transform.scale(pygame.image.load("image/background.jpg").convert_alpha(), (1080, 720))
+        self.menu = Menu(self.screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
+        self.background1 = pygame.transform.scale(pygame.image.load("image/background.jpg").convert_alpha(),
+                                                  (1080, 720))
         self.background2 = pygame.transform.scale(pygame.image.load("image/farm_d.jpeg").convert_alpha(), (1080, 720))
         self.background3 = pygame.transform.scale(pygame.image.load("image/city_1.jpeg").convert_alpha(), (1080, 720))
-        self.background4 = pygame.transform.scale(pygame.image.load("image/city_after.png").convert_alpha(), (1080, 720))
+        self.background4 = pygame.transform.scale(pygame.image.load("image/city_after.png").convert_alpha(),
+                                                  (1080, 720))
         self.background5 = pygame.transform.scale(pygame.image.load("image/city_n.jpeg").convert_alpha(), (1080, 720))
         self.background6 = pygame.transform.scale(pygame.image.load("image/farm_1.jpeg").convert_alpha(), (1080, 720))
         self.background7 = pygame.transform.scale(pygame.image.load("image/house.png").convert_alpha(), (1080, 720))
@@ -511,6 +501,13 @@ class GameLoop:
         self.last_poison_spawn_time = pygame.time.get_ticks()
         self.poison_spawn_delay = random.randint(4000, 7000)
         self.game_state = "playing"
+        self.health_pack_spawn_chance = 1
+        self.health_pack_width = 10
+        self.health_packs_group = pygame.sprite.Group()
+        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites.add(self.player)
+        self.last_bomb_spawn_time = pygame.time.get_ticks()
+        self.bomb_spawn_delay = random.randint(2500, 4000)
 
     def run(self):
         while self.running:
@@ -559,12 +556,12 @@ class GameLoop:
         if self.player.score == self.score_to_change_background1:
             self.screen.blit(self.background3, (-self.camera_x, 0))
 
-        if current_time - self.last_health_pack_time >= self.health_pack_interval:
-            if random.random() < 0.02:
-                health_pack = HealthPack(random.randint(0, width - 30), 0)
-                self.all_sprites.add(health_pack)
-                self.health_packs_group.add(health_pack)
-                self.last_health_pack_time = current_time
+        if random.randint(0, 100) < self.health_pack_spawn_chance:
+            health_pack_x = random.randint(0, width - self.health_pack_width)
+            health_pack_y = 0
+            health_pack = HealthPack(health_pack_x, health_pack_y)
+            self.health_packs_group.add(health_pack)
+            self.all_sprites.add(health_pack)
 
         if self.player.health <= 0:
             self.player.is_dying = True
@@ -621,7 +618,6 @@ class GameLoop:
                 int(self.background1.get_width() - width))
         )
         self.screen.blit(self.background1, (-self.camera_x, 0))
-
 
         if self.death_animation_started:
             if pygame.time.get_ticks() - self.death_animation_start_time >= self.death_animation_duration:
@@ -716,7 +712,7 @@ class GameLoop:
             self.start_game()
         elif selected_action == "exit":
             self.running = False
-    
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -724,7 +720,7 @@ class GameLoop:
             elif event.type == pygame.KEYDOWN and self.game_state == "menu":
                 self.start_game()
 
+
 if __name__ == "__main__":
     game_loop = GameLoop()
     game_loop.run()
-    

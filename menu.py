@@ -8,7 +8,7 @@ screen = pygame.display.set_mode((width, height))
 
 
 class Menu:
-    def __init__(self, screen, menu_image, start_button_image, exit_button_image, restart_button_image):
+    def __init__(self, screen, menu_image, start_button_image, exit_button_image):
         self.screen = screen
         self.menu_image = pygame.transform.scale(LoadImage.menu_image, (1080, 720))
         self.start_button_image = pygame.transform.scale(LoadImage.start_button, (200, 210))

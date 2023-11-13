@@ -1,7 +1,6 @@
 import pygame
 
 
-
 class LoadImage:
     icon = pygame.image.load("image/icon1.png")
 
@@ -108,16 +107,15 @@ class LoadImage:
     ]
 
     poison_bomb = [
-       'image/poison/1.png',
-       'image/poison/2.png',
-       'image/poison/3.png',
-       'image/poison/4.png',
-       'image/poison/5.png',
-       'image/poison/6.png',
-       'image/poison/7.png'
-   ]
-
+        'image/poison/1.png',
+        'image/poison/2.png',
+        'image/poison/3.png',
+        'image/poison/4.png',
+        'image/poison/5.png',
+        'image/poison/6.png',
+        'image/poison/7.png'
+    ]
 
     burn = [
-    f"image/fire/frame_{frame_index:02d}_delay-0.03s.png" for frame_index in range(54)
-]
+        f"image/fire/frame_{frame_index:02d}_delay-0.03s.png" for frame_index in range(54)
+    ]
