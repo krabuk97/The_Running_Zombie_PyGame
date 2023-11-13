@@ -1,0 +1,29 @@
+Metadata-Version: 2.1
+Name: flex-format
+Version: 0.2.18
+Summary: A flexible file format for astronomical (and other) data
+Home-page: https://github.com/AWehrhahn/flex-format
+Author: Ansgar Wehrhahn
+Author-email: ansgar.wehrhahn@physics.uu.se
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+
+Flex
+====
+
+The flexible file fomat.
+
+Structure:
+ - main folder tar (.gz)
+ - contains one (1) header.json file, with Metadata (primary header)
+ - contains any number of folders with more data
+ - e.g. numpy data, pandas table
+ - each folder must contain a header in the form of a header.json file
+ - each type of container gets a file in "extension", container type is set in that extensions header.json
+
+

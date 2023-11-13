@@ -1,0 +1,18 @@
+{
+    "nso.bin": "nso.bin",
+    "atlas12.sav": "atlas12_v1.0.0.sav.gz",
+    "atlas9_vmic0.0.sav": "atlas9_vmic0.0_v1.0.0.sav.gz",
+    "atlas9_vmic2.0.sav": "atlas9_vmic2.0_v1.0.0.sav.gz",
+    "ll_vmic2.0.sav": "ll_vmic2.0_v1.0.0.sav.gz",
+    "marcs2012.sav": "marcs2012_v1.0.0.sav.gz",
+    "marcs2012p_t0.0.sav": "marcs2012p_t0.0_v1.0.0.sav.gz",
+    "marcs2012p_t1.0.sav": "marcs2012p_t1.0_v1.0.0.sav.gz",
+    "marcs2012p_t2.0.sav": "marcs2012p_t2.0_v1.0.0.sav.gz",
+    "marcs2012s_t1.0.sav": "marcs2012s_t1.0_v1.0.0.sav.gz",
+    "marcs2012s_t2.0.sav": "marcs2012s_t2.0_v1.0.0.sav.gz",
+    "marcs2012s_t5.0.sav": "marcs2012s_t5.0_v1.0.0.sav.gz",
+    "marcs2012t00cooldwarfs.sav": "marcs2012t00cooldwarfs_v1.0.0.sav.gz",
+    "marcs2012t01cooldwarfs.sav": "marcs2012t01cooldwarfs_v1.0.0.sav.gz",
+    "marcs2012t02cooldwarfs.sav": "marcs2012t02cooldwarfs_v1.0.0.sav.gz",
+    "marcs2014.sav": "marcs2014_v1.0.0.sav.gz"
+}

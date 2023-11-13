@@ -107,6 +107,17 @@ class LoadImage:
         r'image/frozen/fb12.png',
     ]
 
-    fire_bomb = ["path/to/fire.gif"]
+    poison_bomb = [
+       'image/poison/1.png',
+       'image/poison/2.png',
+       'image/poison/3.png',
+       'image/poison/4.png',
+       'image/poison/5.png',
+       'image/poison/6.png',
+       'image/poison/7.png'
+   ]
 
-    poison_bomb = ['image/frozen/fb12.png']
+
+    burn = [
+    f"image/fire/frame_{frame_index:02d}_delay-0.03s.png" for frame_index in range(54)
+]

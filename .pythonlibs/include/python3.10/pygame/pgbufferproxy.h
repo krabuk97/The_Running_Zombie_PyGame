@@ -1,1 +1,7 @@
-/home/runner/.cache/pip/pool/b6/a3/03/91d907e34428609dcdb538e292702748c8748b5b1f34c6a8c379e9bca2
+#ifndef PG_BUFPROXY_INTERNAL_H
+#define PG_BUFPROXY_INTERNAL_H
+
+#include "include/pygame_bufferproxy.h"
+#define PYGAMEAPI_BUFPROXY_NUMSLOTS 4
+
+#endif /* ~PG_BUFPROXY_INTERNAL_H */

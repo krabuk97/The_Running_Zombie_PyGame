@@ -1,0 +1,76 @@
+Metadata-Version: 2.1
+Name: pysme-astro
+Version: 0.4.166
+Summary: Spectroscopy Made Easy
+Home-page: https://github.com/AWehrhahn/SME/
+Author: Ansgar Wehrhahn, Jeff A. Valenti
+Author-email: ansgar.wehrhahn@physics.uu.se, valenti@stsci.edu
+License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/AWehrhahn/SME/issues
+Project-URL: Documentation, https://pysme-astro.readthedocs.io/en/latest/
+Project-URL: Source Code, https://github.com/AWehrhahn/SME/
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: astropy
+Requires-Dist: pandas
+Requires-Dist: wget
+Requires-Dist: tqdm
+Requires-Dist: colorlog
+Requires-Dist: emcee
+Requires-Dist: pybtex
+Requires-Dist: flex-format
+
+![Python application](https://github.com/AWehrhahn/SME/workflows/Python%20application/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/pysme-astro/badge/?version=latest)](https://pysme-astro.readthedocs.io/en/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5547527.svg)](https://doi.org/10.5281/zenodo.5547527)
+
+# PySME is not currently under development and is provided as is, if you want to take over the project, please contact me.
+
+# PySME
+
+Spectroscopy Made Easy (SME) is a software tool that fits an observed
+spectrum of a star with a model spectrum. Since its initial release in
+[1996](http://adsabs.harvard.edu/abs/1996A%26AS..118..595V), SME has been a
+suite of IDL routines that call a dynamically linked library, which is
+compiled from C++ and fortran. This classic IDL version of SME is available
+for [download](http://www.stsci.edu/~valenti/sme.html).
+
+In 2018, we began began reimplmenting the IDL part of SME in python 3,
+adopting an object oriented paradigm and continuous itegration practices
+(code repository, build automation, self-testing, frequent builds).
+
+# Installation
+
+A stable version is available on pip `pip install pysme-astro`
+If you are interested in the latest version you can do so by cloning this git.
+```bash
+# Clone the git repository
+git clone https://github.com/AWehrhahn/SME.git
+# Move to the new directory
+cd SME
+# Install this folder (as an editable module)
+pip install -e .
+```
+See also the [documentation](https://pysme-astro.readthedocs.io/en/latest/usage/installation.html)
+
+# Poster
+
+A poster about PySME can be found here: [Poster](http://sme.astro.uu.se/poster.html)
+
+# GUI
+
+A GUI for PySME is available in its own repository [PySME-GUI](https://github.com/AWehrhahn/PySME-GUI).
+
+# Windows
+
+Unfortunately PySME is not supported in Windows right now. While there is a SME C libary for Windows, it is not compatible with the Python C Extension inteface on Windows as it was compiled with a different compiler. Therefore if you want to use PySME you would need to compile the SME library with the same compiler.
+
+

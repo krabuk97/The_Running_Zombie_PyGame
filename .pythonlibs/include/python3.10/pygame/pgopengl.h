@@ -1,1 +1,20 @@
-/home/runner/.cache/pip/pool/6d/b2/32/b1b2e9879a5a3df784da79eb40122babc899cf84f8a467f3da660fb91c
+#if !defined(PGOPENGL_H)
+#define PGOPENGL_H
+
+/** This header includes definitions of Opengl functions as pointer types for
+ ** use with the SDL function SDL_GL_GetProcAddress.
+ **/
+
+#if defined(_WIN32)
+#define GL_APIENTRY __stdcall
+#else
+#define GL_APIENTRY
+#endif
+
+typedef void(GL_APIENTRY *GL_glReadPixels_Func)(int, int, int, int,
+                                                unsigned int, unsigned int,
+                                                void *);
+
+typedef void(GL_APIENTRY *GL_glViewport_Func)(int, int, unsigned int,
+                                              unsigned int);
+#endif
