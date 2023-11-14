@@ -1,6 +1,6 @@
 import pygame
 import sys
-from LoadImage import LoadImage
+from load_image import LoadImage
 
 width, height = 1080, 720
 
