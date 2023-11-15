@@ -30,13 +30,14 @@ player = Player()
 gui = Gui(player)
 
 class Bombs(pygame.sprite.Sprite):
-    def __init__(self, player, bomb_type, x, y):
+    def __init__(self, player, bomb_type, x, y, current_background):
         super().__init__()
 
         self.player = player
         self.bomb_type = bomb_type
         self.explosion_type = None
         self.exploded = False
+        self.current_background = current_background
 
         self.load_bomb_image()
 
@@ -61,7 +62,7 @@ class Bombs(pygame.sprite.Sprite):
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
             explosion_group.add(explosion)
 
-    def update(self, camera_x):
+    def update(self, camera_x, current_location):
         if not self.exploded:
             self.rect.y += self.speed
 
@@ -73,28 +74,49 @@ class Bombs(pygame.sprite.Sprite):
             if self.rect.bottom > height:
                 self.rect.bottom = height
 
+            self.check_background_and_spawn(current_location)
+
+    def check_background_and_spawn(self, current_location):
+        if current_location == "background1":
+            if self.bomb_type == "regular":
+                self.create_explosion("normal")
+        elif current_location == "background2":
+            if self.bomb_type == "regular" or self.bomb_type == "fire":
+                self.create_explosion("normal")
+
+            if self.bomb_type == "fire":
+                self.create_explosion("burn")
+        elif current_location == "background3":
+            pass
+
     def reset_bomb(self):
         self.rect.x = random.randint(0, width - self.rect.width)
         self.rect.y = random.randint(-100, -40)
         self.speed = random.randint(1, 5)
 
     def explode(self):
-        # Determine explosion type based on bomb type
         explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
 
-        # Create the explosion
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
         explosion_group.add(explosion)
 
-        # Additional explosions based on bomb type
-        if self.bomb_type == "regular":
-            explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "normal")
-            explosion_group.add(explosion)
+        if self.current_background == "background1":
+            # Tło 1 - dodatkowe zachowanie dla tego tła
+            if self.bomb_type == "regular":
+                explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "normal")
+                explosion_group.add(explosion)
+        elif self.current_background == "background2":
+            # Tło 2 - dodatkowe zachowanie dla tego tła
+            if self.bomb_type == "regular" or self.bomb_type == "fire":
+                explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "normal")
+                explosion_group.add(explosion)
+
+            if self.bomb_type == "fire":
+                explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "burn")
+                explosion_group.add(explosion)
+
         elif self.bomb_type == "frozen":
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "frozen")
-            explosion_group.add(explosion)
-        elif self.bomb_type == "fire":
-            explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "burn")
             explosion_group.add(explosion)
         elif self.bomb_type == "poison":
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "poison")
@@ -221,6 +243,35 @@ class Explosion(pygame.sprite.Sprite):
                     self.player.slow_duration = 420
                     self.player.slow_start_time = pygame.time.get_ticks()
                     self.player.slow_counter = 0
+
+
+class KineticWeapon(pygame.sprite.Sprite):
+    def __init__(self, x, y, player, all_sprites, weapons_group):
+        super().__init__()
+        self.image = pygame.image.load("image/vork.png").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.player = player
+        self.all_sprites = all_sprites
+        self.weapons_group = weapons_group
+
+    def update(self, camera_x):
+        # Symulacja ruchu balistycznego widła
+        self.rect.y += 5  # Przykładowa prędkość opadania, dostosuj do własnych potrzeb
+
+        # Sprawdzenie, czy widło koliduje z graczem
+        if self.rect.colliderect(self.player.rect):
+            # Dodaj widło do grupy sprite'ów gracza
+            self.player.add_weapon(self)
+            # Usuń widło z grupy sprite'ów widł
+            self.weapons_group.remove(self)
+            self.all_sprites.remove(self)
+
+        # Sprawdzenie, czy widło wyleciało poza ekran, jeśli tak, usuń je
+        if self.rect.y > 720:
+            self.kill()
+
 
 if __name__ == "__main__":
     from game_loop import GameLoop

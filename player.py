@@ -38,7 +38,7 @@ class Player(pygame.sprite.Sprite):
         self.animation_delay = 5
         self.animation_counter = 0
         self.facing_left = False
-        self.health = 100
+        self.health = 10
         self.heart = 3
         self.is_dying = False
         self.idle_timer = 0
@@ -55,7 +55,12 @@ class Player(pygame.sprite.Sprite):
         self.burn_duration = 0
         self.poison_duration = 0
         self.poison_counter = 0
+        self.weapons = pygame.sprite.Group()
 
+    def add_weapon(self, weapon):
+    # Dodaj widło do listy widł gracza
+        self.weapons.add(weapon)
+    
     def update(self, camera_x):
         keys = pygame.key.get_pressed()
         any_key_pressed = any(keys)
@@ -66,6 +71,7 @@ class Player(pygame.sprite.Sprite):
             self.animate_idle() if not any_key_pressed and not self.is_jumping else self.animate()
 
         self.update_attributes()
+        self.weapons.update(camera_x)
 
     def handle_movement(self, keys):
         if keys[pygame.K_LEFT]:
@@ -173,6 +179,8 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
+
+        self.weapons.draw(surface)
 
 
 menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
