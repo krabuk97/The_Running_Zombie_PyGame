@@ -6,7 +6,7 @@ width, height = 1080, 720
 screen = pygame.display.set_mode((width, height))
 
 class BombsManager:
-    def __init__(self, player, all_sprites, bombs_group, kinetic_weapons_group):
+    def __init__(self, player, all_sprites, bombs_group, kinetic_weapons_group, current_location=None):
         self.player = player
         self.all_sprites = all_sprites
         self.bombs_group = bombs_group
@@ -15,6 +15,9 @@ class BombsManager:
         self.spawn_delay = {bomb_type: 0 for bomb_type in self.bomb_types}
         self.camera_x = 0
         self.kinetic_weapons_group = kinetic_weapons_group
+        self.kinetic_weapon_spawn_chance = 10
+        self.current_background = None
+        self.current_location = current_location
 
     def spawn_bomb(self, bomb_type):
         if pygame.time.get_ticks() - self.last_spawn_time[bomb_type] >= self.spawn_delay[bomb_type]:

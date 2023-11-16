@@ -180,7 +180,7 @@ class Player(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
-        self.weapons.draw(surface)
+        self.weapons.draw(screen)
 
 
 menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)

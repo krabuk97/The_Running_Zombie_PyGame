@@ -27,10 +27,12 @@ class GameLoop:
       self.screen = pygame.display.set_mode((1080, 720))
       pygame.display.set_caption("The Running Zombie")
       self.gui = Gui(self.player)
+      self.current_location = None
       self.explosion_group = pygame.sprite.Group()
       self.menu = Menu(self.screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
       self.after_death_instance = AfterDeath(screen, LoadImage.death_screen, LoadImage.restart_button, LoadImage.exit_button, current_location=self.current_location)
-      self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group)
+      self.kinetic_weapons_group = pygame.sprite.Group()
+      self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group)
       self.game_state_manager = GameStateManager(self)
       self.background1 = pygame.transform.scale(pygame.image.load("image/background.jpg").convert_alpha(),
                                                 (1080, 720))
@@ -40,7 +42,7 @@ class GameLoop:
       self.background5 = pygame.transform.scale(pygame.image.load("image/wolf.jpg").convert_alpha(), (1080, 720))
       self.background6 = pygame.transform.scale(pygame.image.load("image/nuke_map.jpg").convert_alpha(), (1080, 720))
       self.background7 = pygame.transform.scale(pygame.image.load("image/swamp.jpeg").convert_alpha(), (1080, 720))
-      
+    
       self.death_animation_started = False
       self.last_health_pack_time = 0
       self.health_pack_interval = 10000
@@ -53,7 +55,6 @@ class GameLoop:
       self.score_to_change_background1 = 10
       self.start_game()
       self.time_of_death = 0
-      self.current_location = None
       self.kinetic_weapons_group = pygame.sprite.Group()
     
     def start_game(self):
@@ -92,26 +93,26 @@ class GameLoop:
       self.update_game()
       self.draw_game()
     
-      if self.player.score % 10 == 0 and self.player.score > 0 and not self.background_changed:
-          self.change_background()
+      if self.player.score == self.score_to_change_background1 and not self.background_changed:
+          print("Changing Background")
+          self.change_background(self.current_location)
           self.background_changed = True
-      elif self.player.score % 10 != 0:
-          self.background_changed = False
     
-      if self.player.score == self.score_to_change_background1:
-          self.screen.blit(self.background1, (-self.camera_x, 0))
+      print("Player Score:", self.player.score)
     
       self.spawn_health_packs()
     
       if not self.death_animation_started:
-          self.bombs_manager.update()
+          self.bombs_manager.update(self.current_location)
     
       self.camera_x = max(
           0,
           min(int(self.player.rect.x - (width // 2)),
               int(self.background1.get_width() - width))
       )
-      self.screen.blit(self.background1, (-self.camera_x, 0))
+    
+      if not self.background_changed:
+          self.screen.blit(self.background1, (-self.camera_x, 0))
     
       if self.death_animation_started:
           self.death_animation()
@@ -151,12 +152,18 @@ class GameLoop:
         collisions = pygame.sprite.spritecollide(self.player, self.kinetic_weapons_group, True)
         for kinetic_weapon in collisions:
 
+            self.player.health -= 10
+
+            self.player.add_weapon(kinetic_weapon)
+
+            self.kinetic_weapons_group.remove(kinetic_weapon)
+
     def draw_kinetic_weapons(self):
         for kinetic_weapon in self.kinetic_weapons_group:
             kinetic_weapon.update(self.camera_x)
             self.screen.blit(kinetic_weapon.image, (kinetic_weapon.rect.x - self.camera_x, kinetic_weapon.rect.y))
-    
-    def change_background(self):
+
+    def change_background(self, current_location):
           backgrounds = [self.background1, self.background2, self.background3, self.background4, self.background5,
                          self.background6, self.background7]
 

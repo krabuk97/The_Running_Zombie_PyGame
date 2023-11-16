@@ -258,18 +258,13 @@ class KineticWeapon(pygame.sprite.Sprite):
         self.weapons_group = weapons_group
 
     def update(self, camera_x):
-        # Symulacja ruchu balistycznego widła
-        self.rect.y += 5  # Przykładowa prędkość opadania, dostosuj do własnych potrzeb
+        self.rect.y += 5
 
-        # Sprawdzenie, czy widło koliduje z graczem
         if self.rect.colliderect(self.player.rect):
-            # Dodaj widło do grupy sprite'ów gracza
             self.player.add_weapon(self)
-            # Usuń widło z grupy sprite'ów widł
             self.weapons_group.remove(self)
             self.all_sprites.remove(self)
 
-        # Sprawdzenie, czy widło wyleciało poza ekran, jeśli tak, usuń je
         if self.rect.y > 720:
             self.kill()
 
@@ -277,6 +272,7 @@ class KineticWeapon(pygame.sprite.Sprite):
 class Rocket(pygame.sprite.Sprite):
     def __init__(self, x, y, player, all_sprites, weapons_group):
         super().__init__()
+        rocket = Rocket(x=100, y=100, player=player, all_sprites=self.all_sprites, weapons_group=self.weapons_group)
         self.image = pygame.image.load("image/rocket.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -285,35 +281,27 @@ class Rocket(pygame.sprite.Sprite):
         self.all_sprites = all_sprites
         self.weapons_group = weapons_group
         self.speed = 5
-        self.target = player.rect  # Cel dla rakiety
+        self.target = player.rect
         self.explosion_radius = 50
 
     def update(self, camera_x):
-        # Oblicz wektor kierunku do celu
         dx = self.target.centerx - self.rect.centerx
         dy = self.target.centery - self.rect.centery
 
-        # Normalizuj wektor
         distance = math.sqrt(dx ** 2 + dy ** 2)
         if distance > 0:
             dx /= distance
             dy /= distance
 
-        # Zastosuj prędkość do wektora
         dx *= self.speed
         dy *= self.speed
-
-        # Aktualizuj położenie rakiety
         self.rect.x += dx
         self.rect.y += dy
 
         self.rotate_towards_target(dx, dy)
 
-        # Sprawdź, czy rakieta dotarła do celu
         if self.rect.colliderect(self.target):
-            # Wybuch rakiety
             self.explode()
-            # Usuń raketę
             self.kill()
 
     def rotate_towards_target(self, dx, dy):
@@ -322,15 +310,12 @@ class Rocket(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def explode(self):
-        # Sprawdź kolizje z graczem
         for weapon in self.weapons_group:
             if pygame.sprite.collide_circle(self, weapon):
-                # Wybuch rakiety na podstawie wybuchu broni gracza
                 self.all_sprites.remove(self)
                 self.weapons_group.remove(self)
-                # Tutaj dodaj logikę efektu wybuchu rakiety
                 print("Rocket exploded!")
-    rocket = Rocket(x=100, y=100, player=player, all_sprites=self.all_sprites, weapons_group=self.weapons_group)
+    
 
 if __name__ == "__main__":
     from game_loop import GameLoop
