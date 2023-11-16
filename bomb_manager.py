@@ -1,6 +1,6 @@
 import random
 import pygame
-from main import Bombs
+from weapons import Bombs
 
 width, height = 1080, 720
 screen = pygame.display.set_mode((width, height))

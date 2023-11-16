@@ -7,11 +7,10 @@ from gui import Gui
 from load_image import LoadImage
 from menu import Menu
 from health_pack import HealthPack
-from main import Bombs, Explosion
+from weapons import Bombs, Explosion, KineticWeapon
 from after_death import AfterDeath
 from bomb_manager import BombsManager
 from game_state_manager import GameStateManager
-from main import KineticWeapon
 
 
 width, height = 1080, 720

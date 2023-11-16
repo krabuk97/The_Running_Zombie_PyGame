@@ -1,7 +1,7 @@
 modules = ["python-3.10:v18-20230807-322e88b"]
 
 hidden = [".pythonlibs"]
-run = "python3 main.py"
+run = "python3 weapons.py"
 entrypoint = "main.py"
 
 [nix]
@@ -11,5 +11,5 @@ channel = "stable-23_05"
 language = "python3"
 
 [deployment]
-run = ["sh", "-c", "main.py"]
+run = ["sh", "-c", "weapons.py"]
 deploymentTarget = "cloudrun"

@@ -4,6 +4,7 @@ from load_image import LoadImage
 from gui import Gui
 from menu import Menu
 from player import Player
+import math
 
 pygame.init()
 
@@ -15,7 +16,7 @@ pygame.display.set_caption("The Running Zombie")
 white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
-
+player = Player()
 pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (width, height))
 death_screen = pygame.transform.scale(LoadImage.death_screen, (width, height))
@@ -26,7 +27,7 @@ health_packs_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
 menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
-player = Player()
+
 gui = Gui(player)
 
 class Bombs(pygame.sprite.Sprite):
@@ -272,6 +273,64 @@ class KineticWeapon(pygame.sprite.Sprite):
         if self.rect.y > 720:
             self.kill()
 
+
+class Rocket(pygame.sprite.Sprite):
+    def __init__(self, x, y, player, all_sprites, weapons_group):
+        super().__init__()
+        self.image = pygame.image.load("image/rocket.png").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.player = player
+        self.all_sprites = all_sprites
+        self.weapons_group = weapons_group
+        self.speed = 5
+        self.target = player.rect  # Cel dla rakiety
+        self.explosion_radius = 50
+
+    def update(self, camera_x):
+        # Oblicz wektor kierunku do celu
+        dx = self.target.centerx - self.rect.centerx
+        dy = self.target.centery - self.rect.centery
+
+        # Normalizuj wektor
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+        if distance > 0:
+            dx /= distance
+            dy /= distance
+
+        # Zastosuj prędkość do wektora
+        dx *= self.speed
+        dy *= self.speed
+
+        # Aktualizuj położenie rakiety
+        self.rect.x += dx
+        self.rect.y += dy
+
+        self.rotate_towards_target(dx, dy)
+
+        # Sprawdź, czy rakieta dotarła do celu
+        if self.rect.colliderect(self.target):
+            # Wybuch rakiety
+            self.explode()
+            # Usuń raketę
+            self.kill()
+
+    def rotate_towards_target(self, dx, dy):
+        angle = math.degrees(math.atan2(-dy, dx))
+        self.image = pygame.transform.rotate(self.original_image, angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+    def explode(self):
+        # Sprawdź kolizje z graczem
+        for weapon in self.weapons_group:
+            if pygame.sprite.collide_circle(self, weapon):
+                # Wybuch rakiety na podstawie wybuchu broni gracza
+                self.all_sprites.remove(self)
+                self.weapons_group.remove(self)
+                # Tutaj dodaj logikę efektu wybuchu rakiety
+                print("Rocket exploded!")
+    rocket = Rocket(x=100, y=100, player=player, all_sprites=self.all_sprites, weapons_group=self.weapons_group)
 
 if __name__ == "__main__":
     from game_loop import GameLoop
