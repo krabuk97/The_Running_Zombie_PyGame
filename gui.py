@@ -38,4 +38,5 @@ class Gui:
         if current_time - self.time_passed >= 1:
             self.player.score += 1
             self.time_passed = current_time
+        print(self.player.score)
         return self.player.score

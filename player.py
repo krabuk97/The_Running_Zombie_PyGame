@@ -16,7 +16,6 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
-        # Ładowanie i skalowanie obrazów
         self.score = 0
         self.walk_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (100, 100))
                             for filename in LoadImage.playerwalk]
@@ -30,7 +29,6 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.bottomleft = (width // -10, height - 2)
 
-        # Atrybuty gracza
         self.speed = 1.5
         self.jump_power = 15
         self.jump_velocity = 0
@@ -58,7 +56,6 @@ class Player(pygame.sprite.Sprite):
         self.weapons = pygame.sprite.Group()
 
     def add_weapon(self, weapon):
-    # Dodaj widło do listy widł gracza
         self.weapons.add(weapon)
     
     def update(self, camera_x):
@@ -98,7 +95,6 @@ class Player(pygame.sprite.Sprite):
             self.rect.y -= self.jump_velocity
 
     def update_attributes(self):
-        # Inne aktualizacje atrybutów gracza
         self.rect.x = max(0, min(self.rect.x, width - self.rect.width))
         self.rect.y = max(0, min(self.rect.y, height - self.rect.height))
 
@@ -191,3 +187,4 @@ while True:
         break
     menu_instance.draw()
     pygame.display.flip()
+    

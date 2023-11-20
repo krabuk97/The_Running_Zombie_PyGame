@@ -30,15 +30,15 @@ menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadI
 
 gui = Gui(player)
 
+
 class Bombs(pygame.sprite.Sprite):
-    def __init__(self, player, bomb_type, x, y, current_background):
+    def __init__(self, player, bomb_type, x, y):
         super().__init__()
 
         self.player = player
         self.bomb_type = bomb_type
         self.explosion_type = None
         self.exploded = False
-        self.current_background = current_background
 
         self.load_bomb_image()
 
@@ -63,7 +63,7 @@ class Bombs(pygame.sprite.Sprite):
             explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
             explosion_group.add(explosion)
 
-    def update(self, camera_x, current_location):
+    def update(self, camera_x):
         if not self.exploded:
             self.rect.y += self.speed
 
@@ -74,21 +74,6 @@ class Bombs(pygame.sprite.Sprite):
 
             if self.rect.bottom > height:
                 self.rect.bottom = height
-
-            self.check_background_and_spawn(current_location)
-
-    def check_background_and_spawn(self, current_location):
-        if current_location == "background1":
-            if self.bomb_type == "regular":
-                self.create_explosion("normal")
-        elif current_location == "background2":
-            if self.bomb_type == "regular" or self.bomb_type == "fire":
-                self.create_explosion("normal")
-
-            if self.bomb_type == "fire":
-                self.create_explosion("burn")
-        elif current_location == "background3":
-            pass
 
     def reset_bomb(self):
         self.rect.x = random.randint(0, width - self.rect.width)
@@ -101,29 +86,8 @@ class Bombs(pygame.sprite.Sprite):
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
         explosion_group.add(explosion)
 
-        if self.current_background == "background1":
-            # Tło 1 - dodatkowe zachowanie dla tego tła
-            if self.bomb_type == "regular":
-                explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "normal")
-                explosion_group.add(explosion)
-        elif self.current_background == "background2":
-            # Tło 2 - dodatkowe zachowanie dla tego tła
-            if self.bomb_type == "regular" or self.bomb_type == "fire":
-                explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "normal")
-                explosion_group.add(explosion)
-
-            if self.bomb_type == "fire":
-                explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "burn")
-                explosion_group.add(explosion)
-
-        elif self.bomb_type == "frozen":
-            explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "frozen")
-            explosion_group.add(explosion)
-        elif self.bomb_type == "poison":
-            explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, "poison")
-            explosion_group.add(explosion)
-
         self.kill()
+
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y, player, explosion_type):
@@ -216,7 +180,8 @@ class Explosion(pygame.sprite.Sprite):
             player_center_x = player_rect.centerx
             player_bottom = player_rect.bottom
 
-            distance_squared = (player_center_x - self.rect.centerx) ** 2 + (player_bottom - self.rect.bottom) ** 2
+            distance_squared = (player_center_x - self.rect.centerx) ** 2 + (
+                    player_bottom - self.rect.bottom) ** 2
 
             if distance_squared <= self.distance_threshold ** 2:
                 if self.explosion_type == "normal":
@@ -259,7 +224,8 @@ class KineticWeapon(pygame.sprite.Sprite):
 
     def update(self, camera_x):
         self.rect.y += 5
-
+        self.rect.x -= camera_x
+        
         if self.rect.colliderect(self.player.rect):
             self.player.add_weapon(self)
             self.weapons_group.remove(self)
@@ -306,7 +272,7 @@ class Rocket(pygame.sprite.Sprite):
 
     def rotate_towards_target(self, dx, dy):
         angle = math.degrees(math.atan2(-dy, dx))
-        self.image = pygame.transform.rotate(self.original_image, angle)
+        self.image = pygame.transform.rotate(self.image, angle)
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def explode(self):
@@ -315,7 +281,49 @@ class Rocket(pygame.sprite.Sprite):
                 self.all_sprites.remove(self)
                 self.weapons_group.remove(self)
                 print("Rocket exploded!")
-    
+
+
+class HealthPack(pygame.sprite.Sprite):
+    def __init__(self, x, y, all_sprites):
+        super().__init__()
+        self.image = pygame.image.load('image/health_pack.png').convert_alpha()
+        self.image = pygame.transform.scale(self.image, (60, 60))
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.take = False
+        self.speed = 4
+        self.all_sprites = all_sprites
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
+    def random_health_pack(self):
+        health_pack_x = random.randint(0, width - self.rect.width)
+        health_pack_y = 0
+        health_pack = HealthPack(health_pack_x, health_pack_y, self.all_sprites)
+        self.all_sprites.add(health_pack)
+
+    def collect(self, player):
+        if player.health < 100:
+            player.health += 50
+            if player.health > 100:
+                player.health = 100
+            self.take = True
+
+    def update(self, camera_x):
+        if self.take:
+            self.kill()
+        else:
+            self.rect.y += self.speed
+
+            if self.rect.bottom > height:
+                self.rect.bottom = height
+
+            hits = pygame.sprite.spritecollide(self, self.all_sprites, False)
+            for hit in hits:
+                if not self.take and isinstance(hit, Player):
+                    self.collect(hit)
+
 
 if __name__ == "__main__":
     from game_loop import GameLoop
