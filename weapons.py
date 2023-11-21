@@ -31,62 +31,91 @@ menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadI
 gui = Gui(player)
 
 
-class Bombs(pygame.sprite.Sprite):
-    def __init__(self, player, bomb_type, x, y):
+class BombButton(pygame.sprite.Sprite):
+    def __init__(self, image_path, position, size, screen, bomb_type, bomb_count):
         super().__init__()
+        original_size = size
+        size = (original_size[0] // 2, original_size[1] // 2)
 
-        self.player = player
+        self.image = pygame.transform.scale(pygame.image.load(image_path).convert_alpha(), size)
+        self.rect = self.image.get_rect(topleft=position)
+        self.screen = screen
         self.bomb_type = bomb_type
-        self.explosion_type = None
-        self.exploded = False
+        self.bomb_count = bomb_count
 
-        self.load_bomb_image()
+    def draw(self):
+        self.screen.blit(self.image, self.rect.topleft)
 
-        self.image = pygame.transform.scale(self.image, (60, 60))
-        self.rect = self.image.get_rect()
-        self.reset_bomb()
+        font = pygame.font.Font(None, 36)
+        text = font.render(str(self.bomb_count), True, (255, 255, 255))
+        text_rect = text.get_rect(center=self.rect.center)
+        self.screen.blit(text, text_rect)
 
-    def load_bomb_image(self):
-        if self.bomb_type == "nuke":
-            self.image = pygame.image.load("image/bomb_nuke.png").convert_alpha()
-        elif self.bomb_type == "regular":
-            self.image = pygame.image.load("image/bomb_reg.png").convert_alpha()
-        elif self.bomb_type == "frozen":
-            self.image = pygame.image.load("image/frozen_bomb.png").convert_alpha()
-        elif self.bomb_type == "fire":
-            self.image = pygame.image.load("image/bomb_fire.png").convert_alpha()
-        elif self.bomb_type == "poison":
-            self.image = pygame.image.load("image/poison_bomb.png").convert_alpha()
+    def handle_click(self, bombs_manager):
+        if self.bomb_count > 0:
+            bombs_manager.spawn_bomb(self.bomb_type)
+            self.bomb_count -= 1
 
-    def create_explosion(self, explosion_type):
-        if explosion_type is not None:
-            explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
-            explosion_group.add(explosion)
 
-    def update(self, camera_x):
-        if not self.exploded:
-            self.rect.y += self.speed
+        class Bombs(pygame.sprite.Sprite):
+            def __init__(self, player, bomb_type, x, y):
+                super().__init__()
 
-            if self.rect.bottom >= height:
-                self.exploded = True
-                self.explode()
+                self.player = player
+                self.bomb_type = bomb_type
+                self.explosion_type = None
+                self.exploded = False
+
+                self.load_bomb_image()
+
+                self.image = pygame.transform.scale(self.image, (60, 60))
+                self.rect = self.image.get_rect()
+                self.reset_bomb()
+
+            def load_bomb_image(self):
+                if self.bomb_type == "nuke":
+                    self.image = pygame.image.load("image/bomb_nuke.png").convert_alpha()
+                elif self.bomb_type == "regular":
+                    self.image = pygame.image.load("image/bomb_reg.png").convert_alpha()
+                elif self.bomb_type == "frozen":
+                    self.image = pygame.image.load("image/frozen_bomb.png").convert_alpha()
+                elif self.bomb_type == "fire":
+                    self.image = pygame.image.load("image/bomb_fire.png").convert_alpha()
+                elif self.bomb_type == "poison":
+                    self.image = pygame.image.load("image/poison_bomb.png").convert_alpha()
+
+            def create_explosion(self, explosion_type):
+                if explosion_type is not None:
+                    explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
+                    explosion_group.add(explosion)
+
+            def update(self, camera_x):
+                if not self.exploded:
+                    self.rect.y += self.speed
+
+                    if self.rect.bottom >= height:
+                        self.exploded = True
+                        self.explode()
+                        self.kill()
+
+                    if self.rect.bottom > height:
+                        self.rect.bottom = height
+
+            def draw(self, camera_x):
+                screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
+
+            def reset_bomb(self):
+                self.rect.x = random.randint(0, width - self.rect.width)
+                self.rect.y = random.randint(-100, -40)
+                self.speed = random.randint(1, 5)
+
+            def explode(self):
+                explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
+
+                explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
+                explosion_group.add(explosion)
+
                 self.kill()
-
-            if self.rect.bottom > height:
-                self.rect.bottom = height
-
-    def reset_bomb(self):
-        self.rect.x = random.randint(0, width - self.rect.width)
-        self.rect.y = random.randint(-100, -40)
-        self.speed = random.randint(1, 5)
-
-    def explode(self):
-        explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
-
-        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
-        explosion_group.add(explosion)
-
-        self.kill()
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -116,6 +145,8 @@ class Explosion(pygame.sprite.Sprite):
             self.image = pygame.Surface((0, 0))
 
     def load_explosion_images(self):
+        target_size = None
+
         if self.explosion_type == "normal" or self.explosion_type == "regular":
             explosion_images = LoadImage.explosion_files
             size = (150, 150)
@@ -144,11 +175,17 @@ class Explosion(pygame.sprite.Sprite):
         else:
             raise ValueError(f"Unknown explosion_type: {self.explosion_type}")
 
-        self.images = [
-            pygame.transform.scale(pygame.image.load(image_path).convert_alpha(), size)
+        original_images = [
+            pygame.image.load(image_path).convert_alpha()
             for image_path in explosion_images
         ]
 
+        # Skalowanie z utrzymaniem proporcji
+        self.images = [
+            pygame.transform.smoothscale(img, target_size)
+            for img in original_images
+        ]
+    
     def update(self, camera_x):
         current_time = pygame.time.get_ticks()
         elapsed_time = current_time - self.animation_start_time
@@ -210,6 +247,10 @@ class Explosion(pygame.sprite.Sprite):
                     self.player.slow_start_time = pygame.time.get_ticks()
                     self.player.slow_counter = 0
 
+    def reset_bomb(self):
+        self.animation_counter = 0
+        self.finished = False
+
 
 class KineticWeapon(pygame.sprite.Sprite):
     def __init__(self, x, y, player, all_sprites, weapons_group):
@@ -238,8 +279,8 @@ class KineticWeapon(pygame.sprite.Sprite):
 class Rocket(pygame.sprite.Sprite):
     def __init__(self, x, y, player, all_sprites, weapons_group):
         super().__init__()
-        rocket = Rocket(x=100, y=100, player=player, all_sprites=self.all_sprites, weapons_group=self.weapons_group)
-        self.image = pygame.image.load("image/rocket.png").convert_alpha()
+        self.original_image = pygame.image.load("image/rocket.png").convert_alpha()
+        self.image = self.original_image.copy()
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -249,6 +290,7 @@ class Rocket(pygame.sprite.Sprite):
         self.speed = 5
         self.target = player.rect
         self.explosion_radius = 50
+        self.radius = 20  # Dodany atrybut promienia
 
     def update(self, camera_x):
         dx = self.target.centerx - self.rect.centerx
@@ -272,16 +314,17 @@ class Rocket(pygame.sprite.Sprite):
 
     def rotate_towards_target(self, dx, dy):
         angle = math.degrees(math.atan2(-dy, dx))
-        self.image = pygame.transform.rotate(self.image, angle)
+        self.image = pygame.transform.rotate(self.original_image, angle)
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def explode(self):
         for weapon in self.weapons_group:
-            if pygame.sprite.collide_circle(self, weapon):
+            # Zmieniona funkcja collide_circle na collide_rect z promieniem
+            if pygame.sprite.collide_rect(self, weapon):
                 self.all_sprites.remove(self)
                 self.weapons_group.remove(self)
                 print("Rocket exploded!")
-
+                
 
 class HealthPack(pygame.sprite.Sprite):
     def __init__(self, x, y, all_sprites):
