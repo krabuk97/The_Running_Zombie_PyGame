@@ -61,17 +61,22 @@ class BombsManager:
     def get_bomb_count(self, bomb_type):
         return self.bomb_counts.get(bomb_type, 0)
 
-    def spawn_bomb(self, bomb_type, x, y):
-        if pygame.time.get_ticks() - self.last_spawn_time[bomb_type] >= self.spawn_delay[bomb_type]:
-            bomb = Bombs(self.player, bomb_type, x, y)
-            self.all_sprites.add(bomb)
-            self.bombs_group.add(bomb)
-            self.last_spawn_time[bomb_type] = pygame.time.get_ticks()
-            self.spawn_delay[bomb_type] = random.randint(2500, 8000)
+    def spawn_bomb(self, bomb_type):
+        if bomb_type == "vork":
+            x = 100
+            y = 0
+            self.spawn_kinetic_weapons(x, y)
+        else:
+            if pygame.time.get_ticks() - self.last_spawn_time[bomb_type] >= self.spawn_delay[bomb_type]:
+                bomb = Bombs(self.player, bomb_type, 100, 0)  # Przykładowe konkretne wartości x, y
+                self.all_sprites.add(bomb)
+                self.bombs_group.add(bomb)
+                self.last_spawn_time[bomb_type] = pygame.time.get_ticks()
+                self.spawn_delay[bomb_type] = random.randint(2500, 8000)
 
     def spawn_kinetic_weapons(self, x, y):
-        if random.randint(0, 100) < self.kinetic_weapon_spawn_chance:
-            kinetic_weapon = KineticWeapon(x, y, self.player, self.all_sprites, self.kinetic_weapons_group)
+        if self.selected_bomb_type == "vork" or (random.randint(0, 100) < self.kinetic_weapon_spawn_chance):
+            kinetic_weapon = KineticWeapon(x, y, self.player, self.all_sprites, self.weapons_group)
             self.kinetic_weapons_group.add(kinetic_weapon)
             self.all_sprites.add(kinetic_weapon)
 
@@ -84,13 +89,20 @@ class BombsManager:
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
 
-        self.spawn_kinetic_weapons(100, 0)  # Example coordinates for kinetic weapons
+        for bomb_type in self.bomb_types:
+            x = random.randint(0, 1080)
+            y = random.randint(0, 720)
+            self.spawn_bomb(bomb_type)
+
+        self.spawn_rocket(50, 0)
+
+        self.spawn_kinetic_weapons(200, 0)  # Example coordinates for kinetic weapons
 
         for bomb_type in self.bomb_types:
             # Example coordinates for each bomb type
             x = random.randint(0, 1080)
             y = random.randint(0, 720)
-            self.spawn_bomb(bomb_type, x, y)
+            self.spawn_bomb(bomb_type)
 
 
 class SelectedBomb:
@@ -110,12 +122,28 @@ class BombButton(pygame.sprite.Sprite):
         original_size = size
         size = (original_size[0] // 2, original_size[1] // 2)
 
-        self.image = pygame.transform.scale(pygame.image.load(image_path).convert_alpha(), size)
+        self.original_image = pygame.transform.scale(pygame.image.load(image_path).convert_alpha(), size)
+        self.image = self.original_image.copy()
         self.rect = self.image.get_rect(topleft=position)
         self.screen = screen
         self.selected_bomb = selected_bomb
         self.bomb_type = bomb_type
         self.bomb_count = bomb_count
+
+    def update(self):
+        mouse_pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_pos):
+            self.image = self.increase_brightness(self.original_image)
+        else:
+            self.image = self.original_image.copy()
+
+    def increase_brightness(self, image):
+        factor = 1.5
+        brightened_image = pygame.Surface(image.get_size(), pygame.SRCALPHA)
+        brightened_image.fill((255, 255, 255, 0))
+        brightened_image.blit(image, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        brightened_image = pygame.transform.scale(brightened_image, image.get_size())
+        return brightened_image
 
     def draw(self):
         self.screen.blit(self.image, self.rect.topleft)
@@ -218,11 +246,15 @@ class Explosion(pygame.sprite.Sprite):
             self.rect = pygame.Rect(x, y, 0, 0)
             self.image = pygame.Surface((0, 0))
 
-        # Inside the Explosion class
     def load_explosion_images(self):
         target_size = None
 
         if self.explosion_type == "normal" or self.explosion_type == "regular":
+            explosion_images = LoadImage.explosion_files
+            target_size = (150, 150)
+            self.distance_threshold = 90
+            self.damage_amount = 5
+        elif self.explosion_type == "rocket":
             explosion_images = LoadImage.explosion_files
             target_size = (150, 150)
             self.distance_threshold = 90
@@ -316,6 +348,10 @@ class Explosion(pygame.sprite.Sprite):
                     self.player.burn = True
                     self.player.burn_duration = 10
                     self.kill()
+                elif self.explosion_type == "rocket":
+                    self.player.health -= self.damage_amount
+                    self.damage_amount = 10
+                    self.kill()
                 else:
                     self.player.health -= self.damage_amount
                     self.player.slow_duration = 420
@@ -342,7 +378,7 @@ class KineticWeapon(pygame.sprite.Sprite):
     def update(self, camera_x):
         self.rect.y += 5
         self.rect.x -= camera_x
-        
+
         if self.rect.colliderect(self.player.rect):
             self.player.add_weapon(self)
             self.weapons_group.remove(self)
@@ -352,8 +388,8 @@ class KineticWeapon(pygame.sprite.Sprite):
             self.kill()
 
 
-class Rocket(pygame.sprite.Sprite):
-    def __init__(self, x, y, player, all_sprites, weapons_group):
+class Weapon(pygame.sprite.Sprite):
+    def __init__(self, x, y, player, all_sprites, weapons_group, explosion_type="normal"):
         super().__init__()
         self.original_image = pygame.image.load("image/rocket.png").convert_alpha()
         self.image = self.original_image.copy()
@@ -363,10 +399,9 @@ class Rocket(pygame.sprite.Sprite):
         self.player = player
         self.all_sprites = all_sprites
         self.weapons_group = weapons_group
+        self.explosion_type = explosion_type
         self.speed = 5
         self.target = player.rect
-        self.explosion_radius = 50
-        self.radius = 20
 
     def update(self, camera_x):
         dx = self.target.centerx - self.rect.centerx
@@ -394,12 +429,18 @@ class Rocket(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def explode(self):
-        for weapon in self.weapons_group:
-            if pygame.sprite.collide_rect(self, weapon):
-                self.all_sprites.remove(self)
-                self.weapons_group.remove(self)
-                print("Rocket exploded!")
-                
+        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, self.explosion_type)
+        self.all_sprites.add(explosion)
+        self.weapons_group.remove(self)
+
+class Rocket(Weapon):
+    def __init__(self, x, y, player, all_sprites, weapons_group):
+        super().__init__(x, y, player, all_sprites, weapons_group, explosion_type="normal")
+        self.original_image = pygame.image.load("image/rocket.png").convert_alpha()
+        self.image = pygame.transform.scale(self.original_image.copy(), (60, 60))  # Zmniejsz rozmiar rakiety
+        self.speed = 5
+        self.explosion_radius = 50
+        self.radius = 20
 
 class HealthPack(pygame.sprite.Sprite):
     def __init__(self, x, y, all_sprites):
