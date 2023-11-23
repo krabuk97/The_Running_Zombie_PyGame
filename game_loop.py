@@ -11,6 +11,8 @@ from weapons import Explosion, HealthPack, BombButton, BombsManager, SelectedBom
 
 width, height = 1080, 720
 screen = pygame.display.set_mode((width, height))
+bomb_types = ["rocket", "nuke", "regular", "frozen", "fire", "poison", "vork"]
+
 
 
 class GameStateManager:
@@ -51,11 +53,14 @@ class GameLoop:
         pygame.init()
         self.all_sprites = pygame.sprite.Group()
         self.bombs_group = pygame.sprite.Group()
+        self.kinetic_weapons_group = pygame.sprite.Group()
+        self.weapons_group = pygame.sprite.Group()
         self.health_packs_group = pygame.sprite.Group()
         self.player = Player()
         self.screen = pygame.display.set_mode((1080, 720))
         pygame.display.set_caption("The Running Zombie")
         self.gui = Gui(self.player)
+        self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.weapons_group, bomb_types)
         self.explosion_group = pygame.sprite.Group()
         self.menu = Menu(self.screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
         self.after_death_instance = AfterDeath(
@@ -87,6 +92,7 @@ class GameLoop:
         self.new_background_index = 0
         self.current_background_index = 0
         self.score_to_change_background = 10
+        self.current_background = None
         self.background_changed = False
         self.time_of_death = 0
         self.health_pack_spawn_chance = 1
@@ -105,14 +111,6 @@ class GameLoop:
         ]
 
         selected_bomb = SelectedBomb()
-
-        for i, bomb_type in enumerate(["rocket", "bomb_nuke", "bomb_reg", "frozen_bomb", "bomb_fire", "poison_bomb", "vork"]):
-            if i < len(bomb_button_positions):
-                image_path = f"image/{bomb_type}.png"
-                bomb_button = BombButton(image_path, bomb_button_positions[i], (100, 100), screen, bomb_type, 0, selected_bomb)
-                bomb_buttons.add(bomb_button)
-            else:
-                print(f"Warning: Not enough positions for bomb type '{bomb_type}'")
 
     def start_game(self):
         self.player = Player()
@@ -149,11 +147,10 @@ class GameLoop:
                 int(self.background1.get_width() - self.screen.get_width())),
         )
 
-        if self.player.score >= self.score_to_change_background and not self.background_changed:
+        if self.player.score % 10 == 0 and not self.background_changed:
             print("Changing Background")
             self.update_background()
             self.background_changed = True
-            self.score_to_change_background += 10
 
         self.health_packs_group.update(self.camera_x)
 
@@ -196,12 +193,7 @@ class GameLoop:
             sys.exit()
 
     def draw_game(self):
-        current_background = self.background1
-
-        if self.background_changed:
-            current_background = self.background
-
-        self.screen.blit(current_background, (-self.camera_x, 0))
+        self.screen.blit(self.background1, (-self.camera_x, 0))
 
         for explosion in self.explosion_group:
             explosion.update(self.camera_x)
@@ -248,15 +240,20 @@ class GameLoop:
             self.bombs_manager.spawn_bomb(selected_bomb_type, x=mouse_x, y=mouse_y)
 
     def update_background(self):
-        backgrounds = [self.background1, self.background2, self.background3, self.background4, self.background5,
-                       self.background6, self.background7]
+        if self.game_state == "death_screen" and not self.background_changed:
+            backgrounds = [self.background1, self.background2, self.background3, self.background4, self.background5,
+                           self.background6, self.background7]
 
-        self.current_background_index += 1
-        if self.current_background_index < len(backgrounds):
-            self.background = backgrounds[self.current_background_index]
-            self.background_changed = True
+            self.current_background_index = (self.current_background_index + 1) % len(backgrounds)
+            self.current_background = backgrounds[self.current_background_index]
             print(f"Changed background to {self.current_background_index}")
 
+            # Reset the flag to indicate that the background has been updated
+            self.background_changed = True
+        else:
+            # Reset the flag to indicate that the background doesn't need to be updated
+            self.background_changed = False
+            
     def update_kinetic_weapons(self, camera_x):
         self.kinetic_weapons_group.update(self.camera_x)
 

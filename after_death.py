@@ -16,7 +16,7 @@ death_screen = pygame.transform.scale(LoadImage.death_screen, (1080, 720))
 
 
 class AfterDeath:
-    def __init__(self, screen, background, restart_button, exit_button, current_location=None):
+    def __init__(self, screen, background, restart_button, exit_button):
         self.screen = screen
         self.background = background
         self.restart_button = pygame.transform.scale(restart_button, (200, 210))
@@ -25,7 +25,6 @@ class AfterDeath:
         self.exit_button_scaled = self.exit_button.copy()
         self.selected_button = None
         self.button_hover_scale = 1.1
-        self.current_location = current_location
         
     def handle_events(self):
         for event in pygame.event.get():
