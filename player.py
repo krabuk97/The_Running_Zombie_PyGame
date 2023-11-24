@@ -1,6 +1,8 @@
 import pygame
+import random
 from menu import Menu
 from load_image import LoadImage
+import math
 
 width, height = 1080, 720
 
@@ -10,7 +12,6 @@ pygame.display.set_caption("The Running Zombie")
 white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
-
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -29,14 +30,14 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.bottomleft = (width // -10, height - 2)
 
-        self.speed = 1.5
+        self.speed = 200
         self.jump_power = 15
         self.jump_velocity = 0
         self.is_jumping = False
         self.animation_delay = 5
         self.animation_counter = 0
         self.facing_left = False
-        self.health = 10
+        self.health = 100
         self.heart = 3
         self.is_dying = False
         self.idle_timer = 0
@@ -54,6 +55,7 @@ class Player(pygame.sprite.Sprite):
         self.poison_duration = 0
         self.poison_counter = 0
         self.weapons = pygame.sprite.Group()
+        self.target_position = None
 
     def add_weapon(self, weapon):
         self.weapons.add(weapon)
@@ -63,26 +65,37 @@ class Player(pygame.sprite.Sprite):
         any_key_pressed = any(keys)
 
         if not self.is_dying:
-            self.handle_movement(keys)
-            self.handle_jumping(keys)
+            self.handle_movement()
+            self.handle_jumping()
             self.animate_idle() if not any_key_pressed and not self.is_jumping else self.animate()
 
         self.update_attributes()
         self.weapons.update(camera_x)
 
-    def handle_movement(self, keys):
-        if keys[pygame.K_LEFT]:
-            self.rect.x -= self.speed
-            self.facing_left = True
-        elif keys[pygame.K_RIGHT]:
-            self.rect.x += self.speed
-            self.facing_left = False
+    def set_target_position(self, position):
+        self.target_position = position
 
-    def handle_jumping(self, keys):
-        if keys[pygame.K_SPACE]:
-            if not self.is_jumping:
-                self.is_jumping = True
-                self.jump_velocity = self.jump_power
+    def handle_movement(self):
+        if self.target_position:
+            target_x, target_y = self.target_position
+            dx = target_x - self.rect.x
+            dy = target_y - self.rect.y
+
+            distance = math.sqrt(dx ** 2 + dy ** 2)
+
+            threshold_distance = 5
+
+            if distance > threshold_distance:
+                dx /= distance
+                dy /= distance
+
+                self.rect.x += dx * self.speed
+                self.rect.y += dy * self.speed
+
+    def handle_jumping(self):
+        if not self.is_jumping and random.randint(1, 100) == 1:
+            self.is_jumping = True
+            self.jump_velocity = self.jump_power
 
         if self.is_jumping:
             self.jump_velocity -= 1
@@ -178,6 +191,10 @@ class Player(pygame.sprite.Sprite):
 
         self.weapons.draw(screen)
 
+player_instance = Player()
+
+target_position = (500, 300)
+player_instance.set_target_position(target_position)
 
 menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 
@@ -187,4 +204,5 @@ while True:
         break
     menu_instance.draw()
     pygame.display.flip()
-    
+
+

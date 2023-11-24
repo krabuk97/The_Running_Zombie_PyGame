@@ -55,7 +55,6 @@ class BombsManager:
         self.kinetic_weapon_spawn_chance = 10
         self.selected_bomb_type = None
         self.is_bomb_selected = False
-        self.bomb_buttons = []
         self.mouse_position = (0, 0)
 
     def update_mouse_position(self, mouse_pos):
@@ -67,9 +66,6 @@ class BombsManager:
 
     def get_selected_bomb(self):
         return self.selected_bomb.get_selected_bomb()
-
-    def add_bomb_button(self, bomb_button):
-        self.bomb_buttons.append(bomb_button)
 
     def get_bomb_count(self, bomb_type):
         return self.bomb_counts.get(bomb_type, 0)
@@ -100,12 +96,6 @@ class BombsManager:
         self.all_sprites.add(rocket)
         self.weapons_group.add(rocket)
 
-    def handle_click(self, mouse_pos):
-        self.mouse_position = mouse_pos  # Aktualizuj mouse_position
-        for bomb_button in self.bomb_buttons:
-            if bomb_button.rect.collidepoint(mouse_pos):
-                bomb_button.handle_click(self)
-
     def update(self):
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
@@ -122,12 +112,11 @@ class BombsManager:
                 # Handle other bomb types here
                 x = random.randint(0, 1080)
                 y = random.randint(0, 720)
-                self.spawn_bomb(self.selected_bomb_type)
+                self.spawn_bomb(self.selected_bomb_type, (self.mouse_position[0], self.mouse_position[1]))
 
             self.is_bomb_selected = False
 
-        # Spawn other default rockets and kinetic weapons
-        self.spawn_rocket(50, 0)
+        
         self.spawn_kinetic_weapons(200, 0)
 
 
@@ -140,54 +129,6 @@ class SelectedBomb:
 
     def get_selected_bomb(self):
         return self.bomb_type
-
-
-class BombButton(pygame.sprite.Sprite):
-    def __init__(self, image_path, position, size, screen, bomb_type, bomb_count, selected_bomb, bombs_manager):
-        super().__init__()
-        original_size = size
-        size = (original_size[0] // 2, original_size[1] // 2)
-
-        self.original_image = pygame.transform.scale(pygame.image.load(image_path).convert_alpha(), size)
-        self.image = self.original_image.copy()
-        self.rect = self.image.get_rect(topleft=position)
-        self.screen = screen
-        self.selected_bomb = selected_bomb
-        self.bomb_type = bomb_type
-        self.bomb_count = bomb_count
-        self.bombs_manager = bombs_manager
-
-    def update(self):
-        mouse_pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(mouse_pos):
-            self.image = self.increase_brightness(self.original_image)
-        else:
-            self.image = self.original_image.copy()
-
-    def increase_brightness(self, image):
-        factor = 1.5
-        brightened_image = pygame.Surface(image.get_size(), pygame.SRCALPHA)
-        brightened_image.fill((255, 255, 255, 0))
-        brightened_image.blit(image, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
-        brightened_image = pygame.transform.scale(brightened_image, image.get_size())
-        return brightened_image
-
-    def draw(self):
-        self.screen.blit(self.image, self.rect.topleft)
-
-        if self.bomb_count > 0:
-            color = (255, 255, 255)
-        else:
-            color = (128, 128, 128)
-
-        pygame.draw.rect(self.screen, color, self.rect, 2)
-
-    def handle_click(self, bombs_manager):
-        if self.bomb_count > 0:
-            bombs_manager.select_bomb(self.bomb_type)
-            self.bomb_count -= 1
-            bombs_manager.spawn_bomb(self.bomb_type, pygame.mouse.get_pos())
-            self.selected_bomb.select_bomb(self.bomb_type)
 
 
 class Bombs(pygame.sprite.Sprite):
@@ -323,6 +264,7 @@ class Explosion(pygame.sprite.Sprite):
         ]
 
     def update(self, camera_x):
+        self.camera_x = camera_x
         current_time = pygame.time.get_ticks()
         elapsed_time = current_time - self.animation_start_time
 
@@ -332,6 +274,8 @@ class Explosion(pygame.sprite.Sprite):
 
         if self.animation_counter < len(self.images):
             self.image = self.images[self.animation_counter]
+        
+        self.rect.x = self.rect.x - self.camera_x
 
         if self.rect.bottom > height:
             self.rect.bottom = height
@@ -386,7 +330,7 @@ class Explosion(pygame.sprite.Sprite):
 
 
 class KineticWeapon(pygame.sprite.Sprite):
-    def __init__(self, x, y, player, all_sprites, weapons_group):
+    def __init__(self, player, all_sprites, weapons_group, x, y):
         super().__init__()
         self.image = pygame.image.load("image/vork.png").convert_alpha()
         self.image = pygame.transform.scale(self.image, (60, 100))
@@ -424,8 +368,9 @@ class Weapon(pygame.sprite.Sprite):
         self.explosion_type = explosion_type
         self.speed = 5
         self.target = player.rect
+        self.angle = 0  # Initial angle
 
-    def update(self, camera_x):
+    def update(self):
         dx = self.target.centerx - self.rect.centerx
         dy = self.target.centery - self.rect.centery
 
@@ -439,14 +384,13 @@ class Weapon(pygame.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
-        self.rotate_towards_target(dx, dy)
-
         if self.rect.colliderect(self.target):
             self.explode()
             self.kill()
 
     def rotate_towards_target(self, dx, dy):
         angle = math.degrees(math.atan2(-dy, dx))
+        self.angle = angle
         self.image = pygame.transform.rotate(self.original_image, angle)
         self.rect = self.image.get_rect(center=self.rect.center)
 
@@ -454,6 +398,7 @@ class Weapon(pygame.sprite.Sprite):
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, self.explosion_type)
         self.all_sprites.add(explosion)
         self.weapons_group.remove(self)
+
 
 class Rocket(Weapon):
     def __init__(self, x, y, player, all_sprites, weapons_group):
@@ -464,10 +409,13 @@ class Rocket(Weapon):
         self.explosion_radius = 50
         self.radius = 20
         self.initial_position = (x, y)
+        self.rect = self.image.get_rect()
+        self.camera_x = 0  # Add this line to initialize camera_x as an instance variable
 
     def launch(self):
         self.rect.x, self.rect.y = self.initial_position
         self.target = self.player.rect
+        self.rotate_towards_target(1, 0)
 
     def update(self, camera_x):
         if not self.target:
@@ -503,15 +451,21 @@ class HealthPack(pygame.sprite.Sprite):
         self.take = False
         self.speed = 4
         self.all_sprites = all_sprites
+        self.spawn_timer = 10
+        self.spawn_interval = 100000
+        self.has_changed_position = False
+        self.player_instance = Player()
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
     def random_health_pack(self):
-        health_pack_x = random.randint(0, width - self.rect.width)
-        health_pack_y = 0
-        health_pack = HealthPack(health_pack_x, health_pack_y, self.all_sprites)
-        self.all_sprites.add(health_pack)
+        if self.spawn_timer <= 0:
+            health_pack_x = random.randint(0, width - self.rect.width)
+            health_pack_y = 0
+            health_pack = HealthPack(health_pack_x, health_pack_y, self.all_sprites)
+            self.all_sprites.add(health_pack)
+            self.spawn_timer = self.spawn_interval
 
     def collect(self, player):
         if player.health < 100:
@@ -521,6 +475,7 @@ class HealthPack(pygame.sprite.Sprite):
             self.take = True
 
     def update(self, camera_x):
+        self.random_health_pack()
         if self.take:
             self.kill()
         else:
@@ -534,41 +489,9 @@ class HealthPack(pygame.sprite.Sprite):
                 if not self.take and isinstance(hit, Player):
                     self.collect(hit)
 
+        self.spawn_timer -= pygame.time.get_ticks() - self.spawn_timer
 
-if __name__ == "__main__":
-    from game_loop import GameLoop
-    from player import Player  # Make sure to import Player
-
-    player = Player()  # Create an instance of the Player class
-    all_sprites = pygame.sprite.Group()
-    bombs_group = pygame.sprite.Group()
-    kinetic_weapons_group = pygame.sprite.Group()
-    weapons_group = pygame.sprite.Group()
-    selected_bomb = SelectedBomb()
-
-    game_loop = GameLoop()
-    bombs_manager = BombsManager(player, all_sprites, bombs_group, kinetic_weapons_group, weapons_group, bomb_types)
-
-    bomb_button_positions = [
-        (1020, 50),
-        (1020, 150),
-        (1020, 250),
-        (1020, 350),
-        (1020, 450),
-        (1020, 550),
-        (1020, 650),
-    ]
-
-    bomb_types = ["rocket", "bomb_nuke", "bomb_reg", "frozen_bomb", "bomb_fire", "poison_bomb", "vork"]
-
-    for i, bomb_type in enumerate(bomb_types):
-        if i < len(bomb_button_positions):
-            image_path = f"image/{bomb_type}.png"
-            bomb_button = BombButton(image_path, bomb_button_positions[i], (100, 100), screen, bomb_type, 5, selected_bomb, bombs_manager)
-            bombs_manager.add_bomb_button(bomb_button)
-        else:
-            print(f"Warning: Not enough positions for bomb type '{bomb_type}'")
-
-    game_loop.run()
-
+        if self.has_changed_position:
+            health_pack_position = (self.rect.x, self.rect.y)
+            self.player_instance.set_target_position(health_pack_position)
 
