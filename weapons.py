@@ -1,7 +1,6 @@
 import random
 import pygame
 from load_image import LoadImage
-from gui import Gui
 from menu import Menu
 from player import Player
 import math
@@ -28,9 +27,6 @@ health_packs_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
 menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
-
-gui = Gui(player)
-
 
 class BombsManager:
     def __init__(self, player, all_sprites, bombs_group, kinetic_weapons_group, weapons_group, bomb_types):
@@ -71,7 +67,7 @@ class BombsManager:
         return self.bomb_counts.get(bomb_type, 0)
 
     def spawn_bomb(self, bomb_type, mouse_position):
-        x, y = mouse_position  # Użyj mouse_position
+        x, y = mouse_position
         if bomb_type == "vork":
             self.spawn_kinetic_weapons(x, y)
         else:
@@ -87,7 +83,7 @@ class BombsManager:
 
     def spawn_kinetic_weapons(self, x, y):
         if self.selected_bomb.get_selected_bomb() == "vork":
-            kinetic_weapon = KineticWeapon(x, y, self.player, self.all_sprites, self.weapons_group)
+            kinetic_weapon = KineticWeapon(self.player, self.all_sprites, self.weapons_group, x, y)
             self.kinetic_weapons_group.add(kinetic_weapon)
             self.all_sprites.add(kinetic_weapon)
 
@@ -116,7 +112,6 @@ class BombsManager:
 
             self.is_bomb_selected = False
 
-        
         self.spawn_kinetic_weapons(200, 0)
 
 
@@ -141,6 +136,7 @@ class Bombs(pygame.sprite.Sprite):
         self.exploded = False
         self.image = pygame.Surface((1, 1))
         self.load_bomb_image()
+        self.speed = 5
         self.image = pygame.transform.scale(self.image, (60, 60))
         self.rect = self.image.get_rect()
         self.reset_bomb(start_x=100, start_y=0, speed=2)
@@ -250,6 +246,14 @@ class Explosion(pygame.sprite.Sprite):
             target_size = (150, 150)
             self.distance_threshold = 90
             self.damage_amount = 0
+        elif self.explosion_type == "vork":
+            if hasattr(LoadImage, "vork_explosion"):
+                explosion_images = LoadImage.vork_explosion
+                target_size = (150, 150)
+                self.distance_threshold = 0
+                self.damage_amount = 0
+            else:
+                return
         else:
             raise ValueError(f"Unknown explosion_type: {self.explosion_type}")
 
@@ -330,27 +334,54 @@ class Explosion(pygame.sprite.Sprite):
 
 
 class KineticWeapon(pygame.sprite.Sprite):
-    def __init__(self, player, all_sprites, weapons_group, x, y):
+    def __init__(self, player, all_sprites, weapons_group, x, y, bomb_type="vork"):
         super().__init__()
-        self.image = pygame.image.load("image/vork.png").convert_alpha()
-        self.image = pygame.transform.scale(self.image, (60, 100))
+        self.original_image = pygame.image.load("image/vork.png").convert_alpha()
+        self.original_image = pygame.transform.scale(self.original_image, (50, 120))
+        self.image = self.original_image.copy()
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+
+        # Set the initial position to the right side of the screen
+        self.rect.x = 1020
+        self.rect.y = random.randint(50, 720)  # Random y position within the screen height
+
         self.player = player
         self.all_sprites = all_sprites
         self.weapons_group = weapons_group
+        self.bomb_type = bomb_type
+
+        # Calculate angle to make the projectile fall towards the player
+        dx = self.player.rect.centerx - self.rect.centerx
+        dy = self.player.rect.centery - self.rect.centery
+        self.angle = math.atan2(dy, dx)
+
+        self.speed = 5
+        self.gravity = 0.1
+        self.vertical_speed = 0  # No initial upward speed
+
+    def draw(self, screen, camera_x):
+        screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
     def update(self, camera_x):
-        self.rect.y += 5
-        self.rect.x -= camera_x
+        self.vertical_speed += self.gravity  # Apply gravity
+        dx = self.speed * math.cos(self.angle)
+        dy = self.vertical_speed
+
+        self.rect.x += dx
+        self.rect.y += dy
+
+        # Check if the projectile is below the ground level
+        if self.rect.y > height:
+            self.rect.y = height - self.rect.height  # Set y-coordinate to embed the projectile in the ground
+            self.angle = math.atan2(1, 0)  # Point the projectile downwards
+            self.vertical_speed = 0  # Stop vertical movement
+
+        rotated_image = pygame.transform.rotate(self.original_image, math.degrees(self.angle))
+        self.rect = rotated_image.get_rect(center=self.rect.center)
+        self.image = rotated_image
 
         if self.rect.colliderect(self.player.rect):
-            self.player.add_weapon(self)
-            self.weapons_group.remove(self)
-            self.all_sprites.remove(self)
-
-        if self.rect.y > 720:
+            self.player.health -= 10
             self.kill()
 
 
@@ -368,7 +399,7 @@ class Weapon(pygame.sprite.Sprite):
         self.explosion_type = explosion_type
         self.speed = 5
         self.target = player.rect
-        self.angle = 0  # Initial angle
+        self.angle = 0
 
     def update(self):
         dx = self.target.centerx - self.rect.centerx
@@ -401,21 +432,30 @@ class Weapon(pygame.sprite.Sprite):
 
 
 class Rocket(Weapon):
-    def __init__(self, x, y, player, all_sprites, weapons_group):
+    def __init__(self, player, all_sprites, weapons_group, x, y):
         super().__init__(x, y, player, all_sprites, weapons_group, explosion_type="normal")
         self.original_image = pygame.image.load("image/rocket.png").convert_alpha()
-        self.image = pygame.transform.scale(self.original_image.copy(), (60, 60))
-        self.speed = 5
+        self.image = pygame.transform.scale(self.original_image.copy(), (80, 80))
+        self.speed = 2
         self.explosion_radius = 50
         self.radius = 20
-        self.initial_position = (x, y)
-        self.rect = self.image.get_rect()
-        self.camera_x = 0  # Add this line to initialize camera_x as an instance variable
+        self.rect = pygame.Rect(x, y, 80, 80)
+        self.camera_x = 0
+        self.target = None
 
-    def launch(self):
-        self.rect.x, self.rect.y = self.initial_position
-        self.target = self.player.rect
+    def launch(self, player):
+        self.rect.x, self.rect.y = width, random.randint(50, 720)  # Launch from the right side
+        self.target = player.rect
         self.rotate_towards_target(1, 0)
+
+    def explode(self):
+        print("Rocket exploded!")
+        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, self.explosion_type)
+        self.all_sprites.add(explosion)
+        self.weapons_group.remove(self)
+
+    def draw(self, screen, camera_x):
+        screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
     def update(self, camera_x):
         if not self.target:
@@ -431,40 +471,46 @@ class Rocket(Weapon):
 
         dx *= self.speed
         dy *= self.speed
+
         self.rect.x += dx
         self.rect.y += dy
 
         self.rotate_towards_target(dx, dy)
 
         if self.rect.colliderect(self.target):
+            print("Rocket collided with target!")
             self.explode()
             self.kill()
 
 
 class HealthPack(pygame.sprite.Sprite):
+    max_health_packs = 5
+
     def __init__(self, x, y, all_sprites):
         super().__init__()
+        self.all_sprites = all_sprites
         self.image = pygame.image.load('image/health_pack.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (60, 60))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
         self.take = False
         self.speed = 4
-        self.all_sprites = all_sprites
-        self.spawn_timer = 10
-        self.spawn_interval = 100000
+        self.spawn_interval = 5000
+        self.spawn_timer = random.randint(0, self.spawn_interval)  # Randomize initial timer
         self.has_changed_position = False
         self.player_instance = Player()
+        self.current_health_packs = 0
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
     def random_health_pack(self):
-        if self.spawn_timer <= 0:
+        if self.spawn_timer <= 0 and self.current_health_packs < self.max_health_packs:
             health_pack_x = random.randint(0, width - self.rect.width)
             health_pack_y = 0
             health_pack = HealthPack(health_pack_x, health_pack_y, self.all_sprites)
             self.all_sprites.add(health_pack)
+            self.current_health_packs += 1
             self.spawn_timer = self.spawn_interval
 
     def collect(self, player):
@@ -473,25 +519,26 @@ class HealthPack(pygame.sprite.Sprite):
             if player.health > 100:
                 player.health = 100
             self.take = True
+            self.current_health_packs -= 1
 
     def update(self, camera_x):
         self.random_health_pack()
+
         if self.take:
             self.kill()
         else:
             self.rect.y += self.speed
 
             if self.rect.bottom > height:
-                self.rect.bottom = height
+                self.kill()
 
             hits = pygame.sprite.spritecollide(self, self.all_sprites, False)
             for hit in hits:
                 if not self.take and isinstance(hit, Player):
                     self.collect(hit)
 
-        self.spawn_timer -= pygame.time.get_ticks() - self.spawn_timer
+        self.spawn_timer -= pygame.time.get_ticks() % self.spawn_interval  # Use modulo for resetting timer
 
         if self.has_changed_position:
             health_pack_position = (self.rect.x, self.rect.y)
             self.player_instance.set_target_position(health_pack_position)
-

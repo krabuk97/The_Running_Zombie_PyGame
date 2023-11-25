@@ -17,6 +17,7 @@ class Gui:
         self.time_passed = time.time()
         self.bomb_button_positions = bomb_button_positions
         self.bomb_types = bomb_types
+        self.selected_bomb_color = (255, 255, 255)
 
     def calculate_health_bar_width(self):
         health_percent = max(0, self.player.health) / 100.0
@@ -29,22 +30,22 @@ class Gui:
         screen.blit(health_bar_cropped, self.health_bar_rect.topleft)
 
     def draw_point_score(self):
-        point_score_text = pygame.font.Font(None, 36).render(f"Score: {self.calculate_point_score()}", 1,
+        point_score_text = pygame.font.Font(None, 36).render(f"Time: {self.calculate_point_score()}", 1,
                                                              (255, 255, 255))
-        screen.blit(point_score_text, (width - point_score_text.get_width() - 50, 50))
-
+        screen.blit(point_score_text, (width - point_score_text.get_width() - 100, 50))
 
     def draw_bomb_buttons(self, selected_bomb):
-        for position, bomb_type in zip(self.bomb_button_positions, self.bomb_types):
-            button_rect = pygame.Rect(position[0], position[1], 50, 50)
-            pygame.draw.rect(screen, (255, 0, 0), button_rect, 2)
+        for index, (position, bomb_type) in enumerate(zip(self.bomb_button_positions, self.bomb_types)):
 
-            if bomb_type == selected_bomb.get_selected_bomb():
-                pygame.draw.rect(screen, (0, 255, 0), button_rect, 2)
+            image_path = f"image/{bomb_type}.png"
+            bomb_image = pygame.image.load(image_path).convert_alpha()
+            bomb_image = pygame.transform.scale(bomb_image, (50, 50))
 
-            font = pygame.font.Font(None, 36)
-            text = font.render(bomb_type, True, (255, 255, 255))
-            screen.blit(text, (position[0] + 60, position[1]))
+            if selected_bomb == bomb_type:
+                # Zaznaczona bomba - zmień kolor
+                bomb_image.fill(self.selected_bomb_color, special_flags=pygame.BLEND_RGBA_MULT)
+
+            screen.blit(bomb_image, (position[0], position[1]))
 
     def calculate_point_score(self):
         current_time = time.time()

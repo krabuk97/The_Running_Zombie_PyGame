@@ -13,6 +13,7 @@ white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
 
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -30,14 +31,14 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.bottomleft = (width // -10, height - 2)
 
-        self.speed = 200
+        self.speed = 10
         self.jump_power = 15
         self.jump_velocity = 0
         self.is_jumping = False
         self.animation_delay = 5
         self.animation_counter = 0
         self.facing_left = False
-        self.health = 100
+        self.health = 10
         self.heart = 3
         self.is_dying = False
         self.idle_timer = 0
@@ -89,8 +90,16 @@ class Player(pygame.sprite.Sprite):
                 dx /= distance
                 dy /= distance
 
-                self.rect.x += dx * self.speed
-                self.rect.y += dy * self.speed
+                # Zwiększenie prędkości w zależności od odległości
+                speed_factor = 1 + (distance / 100)
+
+                # Oddzielne składowe prędkości dla kierunków X i Y
+                speed_x = dx * self.speed * speed_factor
+                speed_y = dy * self.speed * speed_factor
+
+                # Poruszanie postacią w kierunkach X i Y
+                self.rect.x += speed_x
+                self.rect.y += speed_y
 
     def handle_jumping(self):
         if not self.is_jumping and random.randint(1, 100) == 1:
@@ -191,6 +200,7 @@ class Player(pygame.sprite.Sprite):
 
         self.weapons.draw(screen)
 
+
 player_instance = Player()
 
 target_position = (500, 300)
@@ -204,5 +214,3 @@ while True:
         break
     menu_instance.draw()
     pygame.display.flip()
-
-

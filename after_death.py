@@ -17,6 +17,8 @@ death_screen = pygame.transform.scale(LoadImage.death_screen, (1080, 720))
 
 class AfterDeath:
     def __init__(self, screen, background, restart_button, exit_button):
+        self.exit_button_rect = None
+        self.restart_button_rect = None
         self.screen = screen
         self.background = background
         self.restart_button = pygame.transform.scale(restart_button, (200, 210))
@@ -41,8 +43,14 @@ class AfterDeath:
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
-        self.screen.blit(self.restart_button_scaled, self.restart_button_rect.topleft)
-        self.screen.blit(self.exit_button_scaled, self.exit_button_rect.topleft)
+
+        # Check if the rectangles are initialized before drawing
+        if self.restart_button_rect is not None:
+            self.screen.blit(self.restart_button_scaled, self.restart_button_rect.topleft)
+
+        if self.exit_button_rect is not None:
+            self.screen.blit(self.exit_button_scaled, self.exit_button_rect.topleft)
+
         pygame.display.flip()
 
     def run(self):
