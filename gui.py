@@ -42,7 +42,6 @@ class Gui:
             bomb_image = pygame.transform.scale(bomb_image, (50, 50))
 
             if selected_bomb == bomb_type:
-                # Zaznaczona bomba - zmień kolor
                 bomb_image.fill(self.selected_bomb_color, special_flags=pygame.BLEND_RGBA_MULT)
 
             screen.blit(bomb_image, (position[0], position[1]))

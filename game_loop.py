@@ -56,6 +56,8 @@ class GameLoop:
         self.background_changed = False
         self.time_of_death = 0
         self.health_pack = None
+        self.target_group = pygame.sprite.Group()
+        self.selected_bomb_type = None
 
     def start_game(self):
         self.player = Player()
@@ -80,39 +82,40 @@ class GameLoop:
             self.clock.tick(60)
 
     def handle_clicks(self):
-
-        selected_bomb_type = None
-
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # LMB pressed
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_0]:
-                    selected_bomb_type = "rocket"
-                elif keys[pygame.K_8]:
-                    selected_bomb_type = "vork"
-                elif keys[pygame.K_1]:
-                    selected_bomb_type = "nuke"
-                elif keys[pygame.K_2]:
-                    selected_bomb_type = "regular"
-                elif keys[pygame.K_3]:
-                    selected_bomb_type = "frozen"
-                elif keys[pygame.K_4]:
-                    selected_bomb_type = "fire"
-                elif keys[pygame.K_5]:
-                    selected_bomb_type = "poison"
-
-                if selected_bomb_type:
-                    if selected_bomb_type == "rocket":
-                        new_bomb = Rocket(self.player, self.all_sprites, self.weapons_group, mouse_x, mouse_y)
-                        self.bombs_group.add(new_bomb)
-                    elif selected_bomb_type == "vork":
+                if self.selected_bomb_type:
+                    # Throw the selected bomb
+                    if self.selected_bomb_type == "rocket":
+                        new_rocket = Rocket(self.player, self.all_sprites, self.weapons_group, self.target_group, mouse_x, mouse_y,
+                                            bomb_type="rocket", scale_factor=0.3)
+                        new_rocket.launch(self.player, mouse_x, mouse_y)
+                        self.bombs_group.add(new_rocket)
+                    elif self.selected_bomb_type == "vork":
                         new_bomb = KineticWeapon(self.player, self.all_sprites, self.weapons_group, mouse_x, mouse_y)
                         self.bombs_group.add(new_bomb)
                     else:
-                        new_bomb = Bombs(self.player, selected_bomb_type, mouse_x, mouse_y)
+                        new_bomb = Bombs(self.player, self.selected_bomb_type, (mouse_x, mouse_y))
                         self.bombs_group.add(new_bomb)
+
+            elif event.type == pygame.KEYDOWN:
+                # Handle key presses to select bomb types
+                if event.key == pygame.K_0:
+                    self.selected_bomb_type = "rocket"
+                elif event.key == pygame.K_6:
+                    self.selected_bomb_type = "vork"
+                elif event.key == pygame.K_1:
+                    self.selected_bomb_type = "nuke"
+                elif event.key == pygame.K_2:
+                    self.selected_bomb_type = "regular"
+                elif event.key == pygame.K_3:
+                    self.selected_bomb_type = "frozen"
+                elif event.key == pygame.K_4:
+                    self.selected_bomb_type = "fire"
+                elif event.key == pygame.K_5:
+                    self.selected_bomb_type = "poison"
 
     def handle_menu_state(self):
         selected_action = self.menu.handle_events()
@@ -142,6 +145,7 @@ class GameLoop:
 
     def update_game(self):
         self.all_sprites.update(self.camera_x)
+        self.bombs_group.update(self.camera_x)
         self.bombs_manager.update()
         self.update_background()
         self.handle_death()
@@ -166,7 +170,6 @@ class GameLoop:
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
             bomb.draw(self.screen, self.camera_x)
-
             if bomb.rect.colliderect(self.player.rect):
                 explosion = Explosion(bomb.rect.centerx, bomb.rect.bottom, self.player, bomb.bomb_type)
                 self.explosion_group.add(explosion)
@@ -174,8 +177,6 @@ class GameLoop:
         for explosion in self.explosion_group:
             explosion.update(self.camera_x)
             explosion.draw(self.screen)
-
-        self.draw_bombs()
 
         player_instance.update(self.camera_x)
 
@@ -221,21 +222,23 @@ class GameLoop:
     def draw_game(self):
         self.screen.blit(self.background1, (-self.camera_x, 0))
 
-        for explosion in self.explosion_group:
-            explosion.update(self.camera_x)
-            explosion.draw(self.screen)
-
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
             bomb.draw(self.screen, self.camera_x)
-
             if bomb.rect.colliderect(self.player.rect):
                 explosion = Explosion(bomb.rect.centerx, bomb.rect.bottom, self.player, bomb.bomb_type)
                 self.explosion_group.add(explosion)
 
+        for explosion in self.explosion_group:
+            explosion.update(self.camera_x)
+            explosion.draw(self.screen)
+
         for health_pack in self.health_packs_group:
             health_pack.draw(self.screen, self.all_sprites)
 
+        self.bombs_group.draw(self.screen)
+        self.explosion_group.draw(self.screen)
+        self.health_packs_group.draw(self.screen)
         self.all_sprites.draw(self.screen)
         self.player.draw(self.screen)
 

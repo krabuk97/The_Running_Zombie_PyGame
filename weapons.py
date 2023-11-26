@@ -28,6 +28,7 @@ all_sprites = pygame.sprite.Group()
 
 menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 
+
 class BombsManager:
     def __init__(self, player, all_sprites, bombs_group, kinetic_weapons_group, weapons_group, bomb_types):
         self.player = player
@@ -75,11 +76,10 @@ class BombsManager:
                 if bomb_type == "rocket":
                     self.spawn_rocket(x, y)
                 else:
-                    bomb = Bombs(self.player, bomb_type, x, y)
+                    bomb = Bombs(self.player, bomb_type, mouse_position)
                     self.all_sprites.add(bomb)
                     self.bombs_group.add(bomb)
                 self.last_spawn_time[bomb_type] = pygame.time.get_ticks()
-                self.spawn_delay[bomb_type] = random.randint(2500, 8000)
 
     def spawn_kinetic_weapons(self, x, y):
         if self.selected_bomb.get_selected_bomb() == "vork":
@@ -88,7 +88,8 @@ class BombsManager:
             self.all_sprites.add(kinetic_weapon)
 
     def spawn_rocket(self, x, y):
-        rocket = Rocket(x, y, self.player, self.all_sprites, self.weapons_group)
+        rocket = Rocket(self.player, self.all_sprites, self.weapons_group, x, y)
+        rocket.launch(self.player)
         self.all_sprites.add(rocket)
         self.weapons_group.add(rocket)
 
@@ -98,21 +99,17 @@ class BombsManager:
 
         if self.is_bomb_selected:
             if self.selected_bomb_type == "rocket":
-                # Spawn rocket at the mouse position
-                self.spawn_rocket(self.mouse_position[0], self.mouse_position[1])
+                x, y = self.mouse_position
+                self.spawn_rocket(x, y)
             elif self.selected_bomb_type == "vork":
                 x = random.randint(0, 1080)
                 y = random.randint(0, 720)
                 self.spawn_kinetic_weapons(x, y)
             else:
-                # Handle other bomb types here
-                x = random.randint(0, 1080)
-                y = random.randint(0, 720)
-                self.spawn_bomb(self.selected_bomb_type, (self.mouse_position[0], self.mouse_position[1]))
+                x, y = self.mouse_position
+                self.spawn_bomb(self.selected_bomb_type, (x, y))
 
             self.is_bomb_selected = False
-
-        self.spawn_kinetic_weapons(200, 0)
 
 
 class SelectedBomb:
@@ -127,7 +124,7 @@ class SelectedBomb:
 
 
 class Bombs(pygame.sprite.Sprite):
-    def __init__(self, player, bomb_type, x, y):
+    def __init__(self, player, bomb_type, mouse_position):
         super().__init__()
 
         self.player = player
@@ -136,10 +133,13 @@ class Bombs(pygame.sprite.Sprite):
         self.exploded = False
         self.image = pygame.Surface((1, 1))
         self.load_bomb_image()
-        self.speed = 5
+        self.speed = 10
         self.image = pygame.transform.scale(self.image, (60, 60))
         self.rect = self.image.get_rect()
-        self.reset_bomb(start_x=100, start_y=0, speed=2)
+        self.mouse_position = mouse_position
+        x, y = self.mouse_position
+        self.reset_bomb(start_x=x, start_y=0, speed=2)
+        self.time_since_landing = 0
 
     def load_bomb_image(self):
         if self.bomb_type == "nuke":
@@ -163,9 +163,11 @@ class Bombs(pygame.sprite.Sprite):
             self.rect.y += self.speed
 
             if self.rect.bottom >= height:
+                self.time_since_landing += 1
+
+            if self.time_since_landing >= 300:
                 self.exploded = True
                 self.explode()
-                self.kill()
 
             if self.rect.bottom > height:
                 self.rect.bottom = height
@@ -177,6 +179,7 @@ class Bombs(pygame.sprite.Sprite):
         self.rect.x = start_x
         self.rect.y = start_y
         self.speed = speed
+        self.exploded = False
 
     def explode(self):
         explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
@@ -278,7 +281,7 @@ class Explosion(pygame.sprite.Sprite):
 
         if self.animation_counter < len(self.images):
             self.image = self.images[self.animation_counter]
-        
+
         self.rect.x = self.rect.x - self.camera_x
 
         if self.rect.bottom > height:
@@ -341,23 +344,21 @@ class KineticWeapon(pygame.sprite.Sprite):
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect()
 
-        # Set the initial position to the right side of the screen
         self.rect.x = 1020
-        self.rect.y = random.randint(50, 720)  # Random y position within the screen height
+        self.rect.y = random.randint(50, 720)
 
         self.player = player
         self.all_sprites = all_sprites
         self.weapons_group = weapons_group
         self.bomb_type = bomb_type
 
-        # Calculate angle to make the projectile fall towards the player
         dx = self.player.rect.centerx - self.rect.centerx
         dy = self.player.rect.centery - self.rect.centery
         self.angle = math.atan2(dy, dx)
 
         self.speed = 5
         self.gravity = 0.1
-        self.vertical_speed = 0  # No initial upward speed
+        self.vertical_speed = 0
 
     def draw(self, screen, camera_x):
         screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
@@ -370,11 +371,9 @@ class KineticWeapon(pygame.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
-        # Check if the projectile is below the ground level
-        if self.rect.y > height:
-            self.rect.y = height - self.rect.height  # Set y-coordinate to embed the projectile in the ground
-            self.angle = math.atan2(1, 0)  # Point the projectile downwards
-            self.vertical_speed = 0  # Stop vertical movement
+        if self.rect.y > height - self.rect.height:
+            self.rect.y = height - self.rect.height
+            self.vertical_speed = 0
 
         rotated_image = pygame.transform.rotate(self.original_image, math.degrees(self.angle))
         self.rect = rotated_image.get_rect(center=self.rect.center)
@@ -384,73 +383,50 @@ class KineticWeapon(pygame.sprite.Sprite):
             self.player.health -= 10
             self.kill()
 
+        if self.rect.y == height - self.rect.height:
+            self.speed = 0
 
-class Weapon(pygame.sprite.Sprite):
-    def __init__(self, x, y, player, all_sprites, weapons_group, explosion_type="normal"):
+
+class Rocket(pygame.sprite.Sprite):
+    def __init__(self, player, all_sprites, weapons_group, target_group, x, y, bomb_type="rocket", scale_factor=0.3):
         super().__init__()
         self.original_image = pygame.image.load("image/rocket.png").convert_alpha()
+        self.original_image = pygame.transform.scale(self.original_image, (100, 100))
         self.image = self.original_image.copy()
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.player = player
-        self.all_sprites = all_sprites
-        self.weapons_group = weapons_group
-        self.explosion_type = explosion_type
-        self.speed = 5
-        self.target = player.rect
-        self.angle = 0
-
-    def update(self):
-        dx = self.target.centerx - self.rect.centerx
-        dy = self.target.centery - self.rect.centery
-
-        distance = math.sqrt(dx ** 2 + dy ** 2)
-        if distance > 0:
-            dx /= distance
-            dy /= distance
-
-        dx *= self.speed
-        dy *= self.speed
-        self.rect.x += dx
-        self.rect.y += dy
-
-        if self.rect.colliderect(self.target):
-            self.explode()
-            self.kill()
-
-    def rotate_towards_target(self, dx, dy):
-        angle = math.degrees(math.atan2(-dy, dx))
-        self.angle = angle
-        self.image = pygame.transform.rotate(self.original_image, angle)
-        self.rect = self.image.get_rect(center=self.rect.center)
-
-    def explode(self):
-        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, self.explosion_type)
-        self.all_sprites.add(explosion)
-        self.weapons_group.remove(self)
-
-
-class Rocket(Weapon):
-    def __init__(self, player, all_sprites, weapons_group, x, y):
-        super().__init__(x, y, player, all_sprites, weapons_group, explosion_type="normal")
-        self.original_image = pygame.image.load("image/rocket.png").convert_alpha()
-        self.image = pygame.transform.scale(self.original_image.copy(), (80, 80))
         self.speed = 2
         self.explosion_radius = 50
         self.radius = 20
-        self.rect = pygame.Rect(x, y, 80, 80)
+        self.rect = self.image.get_rect(topleft=(x, y))
         self.camera_x = 0
         self.target = None
+        self.player = player
+        self.all_sprites = all_sprites
+        self.weapons_group = weapons_group
+        self.bomb_type = bomb_type
+        self.target_group = target_group
 
-    def launch(self, player):
-        self.rect.x, self.rect.y = width, random.randint(50, 720)  # Launch from the right side
+        all_sprites.add(self)
+        weapons_group.add(self)
+
+
+    def launch(self, player, start_x, start_y):
+        self.rect.x, self.rect.y = start_x, start_y
         self.target = player.rect
-        self.rotate_towards_target(1, 0)
+        dx = self.target.centerx - self.rect.centerx
+        dy = self.target.centery - self.rect.centery
+        self.rotate_towards_target(dx, dy)
+
+    def rotate_towards_target(self, dx, dy, scale_factor=0.5):  # Add scale_factor as a parameter
+        dx = self.target.centerx - self.rect.centerx
+        dy = self.target.centery - self.rect.centery
+        angle = math.atan2(dy, dx)
+        rotated_image = pygame.transform.rotate(self.original_image, math.degrees(angle))
+        self.image = pygame.transform.scale(rotated_image, (100, 100))
+        self.rect = self.image.get_rect(center=self.rect.center)
 
     def explode(self):
         print("Rocket exploded!")
-        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, self.explosion_type)
+        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type="normal")
         self.all_sprites.add(explosion)
         self.weapons_group.remove(self)
 
@@ -477,8 +453,13 @@ class Rocket(Weapon):
 
         self.rotate_towards_target(dx, dy)
 
-        if self.rect.colliderect(self.target):
+        if pygame.sprite.spritecollide(self, self.target_group, False):
             print("Rocket collided with target!")
+            self.explode()
+            self.kill()
+
+        if self.rect.bottom >= height and width:
+            print("Rocket hit the ground!")
             self.explode()
             self.kill()
 
