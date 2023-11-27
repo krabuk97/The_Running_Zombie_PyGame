@@ -393,7 +393,7 @@ class Rocket(pygame.sprite.Sprite):
         self.original_image = pygame.image.load("image/rocket.png").convert_alpha()
         self.original_image = pygame.transform.scale(self.original_image, (100, 100))
         self.image = self.original_image.copy()
-        self.speed = 2
+        self.speed = 1.5
         self.explosion_radius = 50
         self.radius = 20
         self.rect = self.image.get_rect(topleft=(x, y))
@@ -408,7 +408,7 @@ class Rocket(pygame.sprite.Sprite):
         all_sprites.add(self)
         weapons_group.add(self)
 
-
+    
     def launch(self, player, start_x, start_y):
         self.rect.x, self.rect.y = start_x, start_y
         self.target = player.rect
@@ -416,7 +416,7 @@ class Rocket(pygame.sprite.Sprite):
         dy = self.target.centery - self.rect.centery
         self.rotate_towards_target(dx, dy)
 
-    def rotate_towards_target(self, dx, dy, scale_factor=0.5):  # Add scale_factor as a parameter
+    def rotate_towards_target(self, dx, dy, scale_factor=0.5):
         dx = self.target.centerx - self.rect.centerx
         dy = self.target.centery - self.rect.centery
         angle = math.atan2(dy, dx)

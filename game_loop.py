@@ -7,6 +7,7 @@ from gui import Gui
 from load_image import LoadImage
 from menu import Menu
 from weapons import Explosion, HealthPack, BombsManager, KineticWeapon, Rocket, SelectedBomb, Bombs
+from level import Level
 from player import player_instance
 
 
@@ -34,15 +35,6 @@ class GameLoop:
         self.after_death_instance = AfterDeath(
             self.screen, LoadImage.death_screen, LoadImage.restart_button, LoadImage.exit_button
         )
-        self.background1 = pygame.transform.scale(
-            pygame.image.load("image/background.jpg").convert_alpha(), (1080, 720)
-        )
-        self.background2 = pygame.transform.scale(pygame.image.load("image/farm_d.jpeg").convert_alpha(), (1080, 720))
-        self.background3 = pygame.transform.scale(pygame.image.load("image/city_n.jpeg").convert_alpha(), (1080, 720))
-        self.background4 = pygame.transform.scale(pygame.image.load("image/pr_n.jpeg").convert_alpha(), (1080, 720))
-        self.background5 = pygame.transform.scale(pygame.image.load("image/wolf.jpg").convert_alpha(), (1080, 720))
-        self.background6 = pygame.transform.scale(pygame.image.load("image/nuke_map.jpg").convert_alpha(), (1080, 720))
-        self.background7 = pygame.transform.scale(pygame.image.load("image/swamp.jpeg").convert_alpha(), (1080, 720))
         self.death_animation_started = False
         self.running = True
         self.clock = pygame.time.Clock()
@@ -58,6 +50,9 @@ class GameLoop:
         self.health_pack = None
         self.target_group = pygame.sprite.Group()
         self.selected_bomb_type = None
+        self.current_level_number = 1
+        self.current_level = Level(self.current_level_number)
+        
 
     def start_game(self):
         self.player = Player()
@@ -135,6 +130,7 @@ class GameLoop:
     def handle_death_screen_state(self):
         selected_action = self.after_death_instance.run()
         if selected_action == "restart":
+            self.restart_game()
             self.start_game()
         elif selected_action == "exit":
             self.running = False
@@ -206,6 +202,23 @@ class GameLoop:
         if self.game_state == "death_screen":
             self.death_screen()
 
+        if self.should_change_level():
+            self.load_level()
+
+    def load_level(self):
+        # Wyświetl ekran ładowania
+        self.screen.blit(self.current_level.get_load_screen(), (0, 0))
+        pygame.display.flip()
+        pygame.time.delay(2000)  # Poczekaj 2 sekundy (zmień, jeśli potrzebujesz innego czasu)
+
+        # Przeładuj poziom
+        self.current_level_number += 1
+        self.current_level = Level(self.current_level_number)
+        self.camera_x = 0  # Zresetuj kamerę
+
+    def should_change_level(self):
+        return self.player.is_dying
+
     def restart_game(self):
         self.player.rect.x = 50
         self.player.rect.y = height - 100
@@ -220,7 +233,8 @@ class GameLoop:
         self.background_changed = False
 
     def draw_game(self):
-        self.screen.blit(self.background1, (-self.camera_x, 0))
+        current_background = self.current_level.get_current_background()
+        self.screen.blit(current_background, (-self.camera_x, 0))
 
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
