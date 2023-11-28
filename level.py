@@ -1,11 +1,17 @@
 import pygame
-from load_image import LoadImage  # Zaimportuj odpowiednią klasę do ładowania obrazów
+from player import Player
 
-# level.py
+width, height = 1080, 720
+screen = pygame.display.set_mode((width, height))
+
 
 class Level:
-    def __init__(self, level_number):
+    def __init__(self, level_number, game_state="playing"):
         self.level_number = level_number
+        self.game_state = game_state
+        self.player = Player()
+        self.level_number = level_number
+        self.screen = screen
         self.background1 = pygame.transform.scale(pygame.image.load("image/background.jpg").convert_alpha(), (1080, 720))
         self.background2 = pygame.transform.scale(pygame.image.load("image/farm_d.jpeg").convert_alpha(), (1080, 720))
         self.background3 = pygame.transform.scale(pygame.image.load("image/city_n.jpeg").convert_alpha(), (1080, 720))
@@ -46,9 +52,7 @@ class Level:
             return self.background6
         elif self.level_number == 7:
             return self.background7
-        # Add more conditions if you have additional levels
         else:
-            # Return a default background or handle the case when the level is not recognized
             return pygame.Surface((1080, 720))
 
     def should_change_level(self):
@@ -63,3 +67,7 @@ class Level:
         self.background_changed = False
         self.current_background_index = 0
         self.current_background = self.background1
+
+    def get_load_screen(self):
+        load_screen_image = pygame.transform.scale(pygame.image.load("image/load_screen1.jpeg").convert_alpha(), (1080, 720))
+        return load_screen_image

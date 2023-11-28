@@ -90,14 +90,11 @@ class Player(pygame.sprite.Sprite):
                 dx /= distance
                 dy /= distance
 
-                # Zwiększenie prędkości w zależności od odległości
                 speed_factor = 1 + (distance / 100)
 
-                # Oddzielne składowe prędkości dla kierunków X i Y
                 speed_x = dx * self.speed * speed_factor
                 speed_y = dy * self.speed * speed_factor
 
-                # Poruszanie postacią w kierunkach X i Y
                 self.rect.x += speed_x
                 self.rect.y += speed_y
 

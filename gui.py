@@ -25,8 +25,7 @@ class Gui:
 
     def draw_health_bar(self):
         health_bar_width = self.calculate_health_bar_width()
-        health_bar_cropped = pygame.Surface((health_bar_width, self.health_bar_rect.height))
-        health_bar_cropped.blit(self.health_bar_full, (0, 0), (0, 0, health_bar_width, self.health_bar_rect.height))
+        health_bar_cropped = pygame.transform.smoothscale(self.health_bar_full, (health_bar_width, self.health_bar_rect.height))
         screen.blit(health_bar_cropped, self.health_bar_rect.topleft)
 
     def draw_point_score(self):
@@ -52,3 +51,4 @@ class Gui:
             self.player.score += 1
             self.time_passed = current_time
         return self.player.score
+

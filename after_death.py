@@ -44,7 +44,6 @@ class AfterDeath:
     def draw(self):
         self.screen.blit(self.background, (0, 0))
 
-        # Check if the rectangles are initialized before drawing
         if self.restart_button_rect is not None:
             self.screen.blit(self.restart_button_scaled, self.restart_button_rect.topleft)
 

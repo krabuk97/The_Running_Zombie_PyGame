@@ -159,18 +159,28 @@ class Bombs(pygame.sprite.Sprite):
             explosion_group.add(explosion)
 
     def update(self, camera_x):
+        print(f"Bomb position before update: ({self.rect.x}, {self.rect.y})")
+
         if not self.exploded:
             self.rect.y += self.speed
 
+            print(f"Bomb position after update: ({self.rect.x}, {self.rect.y})")
+
             if self.rect.bottom >= height:
                 self.time_since_landing += 1
+                print("Bomb reached the bottom")
 
             if self.time_since_landing >= 300:
+                print("Time to explode!")
                 self.exploded = True
                 self.explode()
+                print("Bomb exploded!")
 
             if self.rect.bottom > height:
                 self.rect.bottom = height
+
+        print(f"Bomb position after all checks: ({self.rect.x}, {self.rect.y})")
+
 
     def draw(self, screen, camera_x):
         screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
@@ -183,6 +193,7 @@ class Bombs(pygame.sprite.Sprite):
 
     def explode(self):
         explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
+        self.create_explosion(explosion_type)
 
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
         explosion_group.add(explosion)
@@ -477,19 +488,21 @@ class HealthPack(pygame.sprite.Sprite):
         self.take = False
         self.speed = 4
         self.spawn_interval = 5000
-        self.spawn_timer = random.randint(0, self.spawn_interval)  # Randomize initial timer
+        self.spawn_timer = random.randint(0, self.spawn_interval)
         self.has_changed_position = False
         self.player_instance = Player()
         self.current_health_packs = 0
+        self.player = player
+        self.all_sprites = all_sprites
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
     def random_health_pack(self):
         if self.spawn_timer <= 0 and self.current_health_packs < self.max_health_packs:
-            health_pack_x = random.randint(0, width - self.rect.width)
+            health_pack_x = random.randint(0, width - self.player.rect.width)
             health_pack_y = 0
-            health_pack = HealthPack(health_pack_x, health_pack_y, self.all_sprites)
+            health_pack = HealthPack(health_pack_x, health_pack_y, self.all_sprites, self.player)
             self.all_sprites.add(health_pack)
             self.current_health_packs += 1
             self.spawn_timer = self.spawn_interval
@@ -518,7 +531,7 @@ class HealthPack(pygame.sprite.Sprite):
                 if not self.take and isinstance(hit, Player):
                     self.collect(hit)
 
-        self.spawn_timer -= pygame.time.get_ticks() % self.spawn_interval  # Use modulo for resetting timer
+        self.spawn_timer -= pygame.time.get_ticks() % self.spawn_interval
 
         if self.has_changed_position:
             health_pack_position = (self.rect.x, self.rect.y)
