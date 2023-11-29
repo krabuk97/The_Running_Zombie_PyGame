@@ -119,3 +119,39 @@ class LoadImage:
     burn = [
         f"image/fire/frame_{frame_index:02d}_delay-0.03s.png" for frame_index in range(54)
     ]
+
+    zombie_friend_dead = ["image/z_f/Dead/__Zombie01_Dead_000.png",
+                          "image/z_f/Dead/__Zombie01_Dead_001.png",
+                          "image/z_f/Dead/__Zombie01_Dead_002.png",
+                          "image/z_f/Dead/__Zombie01_Dead_003.png",
+                          "image/z_f/Dead/__Zombie01_Dead_004.png",
+                          "image/z_f/Dead/__Zombie01_Dead_005.png",
+                          "image/z_f/Dead/__Zombie01_Dead_006.png",
+                          "image/z_f/Dead/__Zombie01_Dead_007.png"
+    ]
+
+    zombie_friend_walk = ["image/z_f/Walk/__Zombie01_Walk_000.png",
+                          "image/z_f/Walk/__Zombie01_Walk_001.png",
+                          "image/z_f/Walk/__Zombie01_Walk_002.png",
+                          "image/z_f/Walk/__Zombie01_Walk_003.png",
+                          "image/z_f/Walk/__Zombie01_Walk_004.png",
+                          "image/z_f/Walk/__Zombie01_Walk_005.png",
+                          "image/z_f/Walk/__Zombie01_Walk_006.png",
+                          "image/z_f/Walk/__Zombie01_Walk_007.png",
+                          "image/z_f/Walk/__Zombie01_Walk_008.png",
+                          "image/z_f/Walk/__Zombie01_Walk_009.png"
+    ]
+
+    zombie_friend_idle = [
+        "image/z_f/Idle/__Zombie01_Idle_000.png",
+        "image/z_f/Idle/__Zombie01_Idle_001.png",
+        "image/z_f/Idle/__Zombie01_Idle_002.png",
+        "image/z_f/Idle/__Zombie01_Idle_003.png",
+        "image/z_f/Idle/__Zombie01_Idle_004.png",
+        "image/z_f/Idle/__Zombie01_Idle_005.png",
+        "image/z_f/Idle/__Zombie01_Idle_006.png",
+        "image/z_f/Idle/__Zombie01_Idle_007.png",
+        "image/z_f/Idle/__Zombie01_Idle_008.png",
+        "image/z_f/Idle/__Zombie01_Idle_009.png",
+    ]
+    

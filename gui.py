@@ -19,6 +19,20 @@ class Gui:
         self.bomb_types = bomb_types
         self.selected_bomb_color = (255, 255, 255)
 
+        self.exit_button_image = pygame.transform.scale(
+            pygame.image.load("image/exit_button.png").convert_alpha(), (50, 50)
+        )
+
+    def draw_exit_button(self):
+        screen.blit(self.exit_button_image, (10, 10))
+
+    def handle_exit_button_click(self):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        exit_button_rect = pygame.Rect(10, 10, 50, 50)
+
+        if exit_button_rect.collidepoint(mouse_x, mouse_y):
+            print("Exit button clicked")
+
     def calculate_health_bar_width(self):
         health_percent = max(0, self.player.health) / 100.0
         return int(health_percent * self.health_bar_width)
