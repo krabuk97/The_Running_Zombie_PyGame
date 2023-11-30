@@ -29,17 +29,14 @@ class Level:
         self.friend_appeared = False
 
     def update_background(self):
-        if self.game_state == "death_screen" and not self.background_changed:
-            backgrounds = [self.background1, self.background2, self.background3, self.background4, self.background5,
-                           self.background6, self.background7]
+        backgrounds = [self.background1, self.background2, self.background3, self.background4, self.background5,
+                       self.background6, self.background7]
 
-            self.current_background_index = (self.current_background_index + 1) % len(backgrounds)
-            self.current_background = backgrounds[self.current_background_index]
-            print(f"Changed background to {self.current_background_index}")
+        self.current_background_index = (self.current_background_index + 1) % len(backgrounds)
+        self.current_background = backgrounds[self.current_background_index]
+        print(f"Changed background to {self.current_background_index}")
 
-            self.background_changed = True
-        else:
-            self.background_changed = False
+        self.background_changed = True
 
     def get_current_background(self):
         if self.level_number == 1:
@@ -61,20 +58,6 @@ class Level:
 
     def should_change_level(self):
         return self.player.is_dying
-
-    def load_level(self):
-        self.screen.blit(self.get_load_screen(), (0, 0))
-        pygame.display.flip()
-        pygame.time.delay(2000)
-
-        self.level_number += 1
-        self.background_changed = False
-        self.current_background_index = 0
-        self.current_background = self.background1
-
-        if self.zombie_friend:
-            self.zombie_friend.rect.bottomleft = (width // + 10, height - 2)
-            self.zombie_friend.set_target_position((width - 100, height - 100))  
 
     def get_load_screen(self):
         load_screen_image = pygame.transform.scale(pygame.image.load("image/load_screen1.jpeg").convert_alpha(), (1080, 720))

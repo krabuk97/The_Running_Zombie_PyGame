@@ -1,4 +1,3 @@
-import random
 import pygame
 import sys
 from after_death import AfterDeath
@@ -26,13 +25,25 @@ class GameLoop:
         self.screen = pygame.display.set_mode((1080, 720))
         pygame.display.set_caption("The Running Zombie")
         self.selected_bomb_type = None
-        self.current_level_number = 1
+        self.current_level_number = 4
         self.current_level = Level(self.current_level_number, "playing")
         self.start_x = 0
         self.start_y = 0
         self.player = Player()
         self.zombie_friend = ZombieFriend()
-        self.gui = Gui(self.player, bomb_button_positions, bomb_types)
+        self.bomb_button_positions = [
+            (1020, 50),
+            (1020, 150),
+            (1020, 250),
+            (1020, 350),
+            (1020, 450),
+            (1020, 550),
+            (1020, 650),
+        ]
+        bomb_types = ["rocket", "bomb_nuke", "bomb_reg", "frozen_bomb", "bomb_fire", "poison_bomb", "vork"]
+
+        self.selected_bomb = SelectedBomb()
+        self.gui = Gui(self.player, self.bomb_button_positions, bomb_types)
         self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.weapons_group, bomb_types)
         self.explosion_group = pygame.sprite.Group()
         self.menu = Menu(self.screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
@@ -56,30 +67,44 @@ class GameLoop:
         self.friend_appeared = False
 
     def start_game(self, x, y):
-        start_x = 100
-        start_y = 200
-        self.start_x = start_x
-        self.start_y = start_y
-        self.player = Player(self.start_x, self.start_y)
+        self.game_state = "playing"
+        self.background_changed = False
+
+        self.player = Player()
         self.all_sprites.empty()
         self.bombs_group.empty()
         self.health_packs_group.empty()
 
-        self.health_pack = HealthPack(x, y, self.all_sprites, self.player)
+        self.all_sprites.add(self.player)
+
+        self.health_pack = HealthPack(x, y, self.all_sprites)
         self.health_packs_group.add(self.health_pack)
         self.all_sprites.add(self.player, self.health_pack)
-
-        self.game_state = "playing"
-        self.background_changed = False
 
     def run(self):
         clock = pygame.time.Clock()
         while self.running:
             self.handle_events()
-            self.update_game(self.camera_x)
             self.draw_game()
+            self.update_game(self.camera_x)
             pygame.display.flip()
             clock.tick(60)
+
+            if not self.running:
+                self.after_death.draw()
+                pygame.display.flip()
+                pygame.time.delay(3000)
+                pygame.quit()
+                sys.exit()
+
+            if self.player.score == 100:
+                self.death_screen()
+
+            if self.should_change_level():
+                self.load_level()
+
+            pygame.display.flip()
+            self.clock.tick(60)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -133,9 +158,8 @@ class GameLoop:
             self.zombie_friend.set_target_position((width - 100, height - 100))
             self.friend_appeared = True
 
-        self.update_game(self.camera_x)
         self.draw_game()
-
+        self.update_game(self.camera_x)
 
     def handle_death_animation_state(self):
         self.death_animation()
@@ -152,20 +176,37 @@ class GameLoop:
             pygame.display.flip()
             self.clock.tick(60)
 
-    def update_game(self, camera_x):
-        self.all_sprites.update(self.camera_x)
-        self.health_packs_group.update(self.camera_x)
-        self.bombs_group.update(self.camera_x)
-        self.bombs_manager.update()
-        self.current_level.update_background()
-        self.handle_death()
+    def draw_game(self):
+        current_background = self.current_level.get_current_background()
+        self.screen.blit(current_background, (-self.camera_x, 0))
+
+        self.all_sprites.draw(self.screen)
+
+        if self.game_state == "playing":
+            self.gui.draw_health_bar()
+            self.gui.draw_point_score()
+            self.gui.draw_bomb_buttons(self.selected_bomb_type)
+            self.gui.draw_exit_button()
+
+        for bomb in self.bombs_group:
+            bomb.draw(self.screen, self.camera_x)
+
+        for explosion in self.explosion_group:
+            explosion.draw(self.screen)
+
+        for health_pack in self.health_packs_group:
+            health_pack.draw(self.screen, self.all_sprites)
+
+        self.player.draw(self.screen)
 
         if self.zombie_friend:
-            self.zombie_friend.update(camera_x)
-            self.all_sprites.add(self.zombie_friend)
+            self.zombie_friend.draw(self.screen)
+        self.gui.draw_point_score()
+        self.gui.draw_bomb_buttons(self.selected_bomb_type)
 
-        self.health_packs_group.update(self.camera_x)
-        
+    def update_game(self, camera_x):
+        self.current_level.update_background()
+
         if self.current_background:
             self.camera_x = max(
                 0,
@@ -178,10 +219,25 @@ class GameLoop:
             self.current_level.update_background()
             self.background_changed = True
 
+        self.all_sprites.update(self.camera_x)
+
         self.health_packs_group.update(self.camera_x)
+
+        self.bombs_group.update(self.camera_x)
+
+        self.bombs_manager.update()
+
+        self.handle_death()
+
+        if self.zombie_friend:
+            self.zombie_friend.update(camera_x)
+            self.all_sprites.add(self.zombie_friend)
+
+        self.health_packs_group.update(self.camera_x)
+
         if self.health_pack and self.health_pack.has_changed_position:
             health_pack_position = (self.health_pack.rect.x, self.health_pack.rect.y)
-            player.set_target_position(health_pack_position)
+            self.player.set_target_position(health_pack_position)
 
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
@@ -192,26 +248,15 @@ class GameLoop:
         for explosion in self.explosion_group:
             explosion.update(self.camera_x)
 
-        player.update(self.camera_x)
+        self.player.update(self.camera_x)
 
         if self.death_animation_started:
             self.death_animation()
 
-        self.health_packs_group.draw(self.screen)
         self.all_sprites.update(self.camera_x)
         self.gui.draw_health_bar()
         self.gui.draw_point_score()
         self.all_sprites.draw(self.screen)
-
-        pygame.display.flip()
-        self.clock.tick(60)
-
-        if not self.running:
-            self.after_death.draw()
-            pygame.display.flip()
-            pygame.time.delay(3000)
-            pygame.quit()
-            sys.exit()
 
         if self.player.score == 100:
             self.death_screen()
@@ -219,18 +264,29 @@ class GameLoop:
         if self.should_change_level():
             self.load_level()
 
-    def load_level(self):
-        self.screen.blit(self.current_level.get_load_screen(), (0, 0))
         pygame.display.flip()
-        pygame.time.delay(2000)
+        self.clock.tick(60)
+
+    def load_level(self):
+        if self.zombie_friend:
+            self.zombie_friend.rect.bottomleft = (width // + 10, height - 10)
+            self.zombie_friend.set_target_position((width - 100, height - 100))
 
         self.current_level_number += 1
-        self.current_level = Level(self.current_level_number)
         self.background_changed = False
         self.current_background_index = 0
-        self.current_background = self.current_level.background1
-        self.camera_x = 0
+        self.update_background()
 
+        pygame.display.flip()
+        pygame.time.delay(2000)
+    def setup_zombie_friend(self):
+        self.zombie_friend = ZombieFriend()
+
+        if self.zombie_friend:
+            self.zombie_friend.rect.bottomleft = (width // + 10, height - 2)
+            self.zombie_friend.set_target_position((width - 100, height - 100))
+
+    def setup_zombie_friend(self):
         self.zombie_friend = ZombieFriend()
 
         if self.zombie_friend:
@@ -241,15 +297,15 @@ class GameLoop:
         if self.game_state == "death_screen" and not self.background_changed:
             self.current_level.update_background()
             print(f"Changed background to {self.current_background_index}")
-
             self.background_changed = True
         else:
             self.background_changed = False
-    
+
     def should_change_level(self):
         return self.player.is_dying
 
     def restart_game(self):
+        self.background_changed = False
         self.player.rect.x = 50
         self.player.rect.y = height - 100
         self.all_sprites.empty()
@@ -257,46 +313,17 @@ class GameLoop:
         self.health_packs_group.empty()
 
         self.all_sprites.add(self.player)
-        self.health_pack = HealthPack(x, y, self.all_sprites, self.player)
+        self.health_pack = HealthPack(self.all_sprites, self.player)
         self.health_packs_group.add(self.health_pack)
         self.all_sprites.add(self.health_pack)
 
         self.bombs_manager = BombsManager(
-            self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.current_background,
+            self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group,
+            self.current_level.get_current_background(),
             self.kinetic_weapons_group
         )
+
         self.background_changed = False
-
-    def draw_game(self):
-        self.all_sprites.draw(self.screen)
-
-        if self.game_state == "playing":
-            self.gui.draw_health_bar()
-            self.gui.draw_point_score()
-            self.gui.draw_bomb_buttons(self.selected_bomb_type)
-
-        for bomb in self.bombs_group:
-            bomb.draw(self.screen, self.camera_x)
-
-        for explosion in self.explosion_group:
-            explosion.draw(self.screen)
-
-        for health_pack in self.health_packs_group:
-            health_pack.draw(self.screen, self.all_sprites)
-
-        player.draw(self.screen)
-
-        if self.zombie_friend:
-            self.zombie_friend.draw(self.screen)
-
-        current_background = self.current_level.get_current_background()
-        self.screen.blit(current_background, (-self.camera_x, 0))
-
-        self.gui.draw_point_score()
-        self.gui.draw_bomb_buttons(self.selected_bomb_type)
-
-        pygame.display.flip()
-        self.clock.tick(60)
 
     def draw_bombs(self):
         for bomb in self.bombs_group:
@@ -335,27 +362,5 @@ class GameLoop:
 
 if __name__ == "__main__":
     player = Player()
-    bomb_button_positions = [
-        (1020, 50),
-        (1020, 150),
-        (1020, 250),
-        (1020, 350),
-        (1020, 450),
-        (1020, 550),
-        (1020, 650),
-    ]
-    bomb_types = ["rocket", "bomb_nuke", "bomb_reg", "frozen_bomb", "bomb_fire", "poison_bomb", "vork"]
-
-    selected_bomb = SelectedBomb()
-    gui = Gui(player, bomb_button_positions, bomb_types)
-
     game_loop = GameLoop()
-    while game_loop.running:
-        game_loop.handle_events()
-        game_loop.update_game(game_loop.camera_x)
-        game_loop.draw_game()
-
-        gui.draw_exit_button()
-
-        pygame.display.flip()
-        game_loop.clock.tick(60)
+    game_loop.run()

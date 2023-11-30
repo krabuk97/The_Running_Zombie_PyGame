@@ -32,6 +32,9 @@ class Gui:
 
         if exit_button_rect.collidepoint(mouse_x, mouse_y):
             print("Exit button clicked")
+            self.player.is_dying = True
+            self.game_state = "menu"
+            self.game_loop.handle_menu_state()
 
     def calculate_health_bar_width(self):
         health_percent = max(0, self.player.health) / 100.0
@@ -65,4 +68,3 @@ class Gui:
             self.player.score += 1
             self.time_passed = current_time
         return self.player.score
-

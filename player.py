@@ -209,10 +209,11 @@ class ZombieFriend(Player):
 
         self.image_index = 0
         self.image = self.walk_images[self.image_index]
+        self.image = pygame.transform.flip(self.image, True, False)
         self.rect = self.image.get_rect()
-
+        self.rect.bottomleft = (width // + 1, height + 1)
         self.speed = 20
-        self.jump_power = 10
+        self.jump_power = 0
         self.jump_velocity = 0
         self.is_jumping = False
         self.animation_delay = 5
@@ -356,7 +357,6 @@ class ZombieFriend(Player):
         screen.blit(self.image, self.rect)
 
 
-
 player = Player()
 
 target_position = (500, 300)
@@ -364,7 +364,7 @@ player.set_target_position(target_position)
 
 zombie_friend = ZombieFriend()
 
-zombie_friend.rect.bottomright = (width + 10, height - 2)
+zombie_friend.rect.bottomright = (width + 10, height - 10)
 
 menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 

@@ -2,7 +2,7 @@ import random
 import pygame
 from load_image import LoadImage
 from menu import Menu
-from player import Player
+from player import Player, ZombieFriend
 import math
 
 pygame.init()
@@ -17,6 +17,7 @@ white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
 player = Player()
+zombie_friend = ZombieFriend()
 pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (width, height))
 death_screen = pygame.transform.scale(LoadImage.death_screen, (width, height))
@@ -36,6 +37,7 @@ class BombsManager:
         self.weapons_group = weapons_group
         self.bombs_group = bombs_group
         self.bomb_types = bomb_types
+        self.zombie_friend = zombie_friend
         self.selected_bomb = SelectedBomb(bomb_types)
         self.weapons_group = pygame.sprite.Group()
         self.kinetic_weapons_group = pygame.sprite.Group()
@@ -111,6 +113,11 @@ class BombsManager:
 
             self.is_bomb_selected = False
 
+        if self.zombie_friend:
+            zombie_hit = pygame.sprite.spritecollide(self.zombie_friend, self.bombs_group, False)
+            for bomb in zombie_hit:
+                bomb.handle_explosion_collision()
+
 
 class SelectedBomb:
     def __init__(self, bomb_type=None):
@@ -128,6 +135,7 @@ class Bombs(pygame.sprite.Sprite):
         super().__init__()
 
         self.player = player
+        self.zombie_friend = zombie_friend
         self.bomb_type = bomb_type
         self.explosion_type = None
         self.exploded = False
@@ -165,7 +173,7 @@ class Bombs(pygame.sprite.Sprite):
                 self.time_since_landing += 1
                 print("Bomb reached the bottom")
 
-            if self.time_since_landing >= 180:
+            if self.time_since_landing >= 180:  # Zmieniłem 3 sekundy na 180 klatek (60 FPS * 3 sekundy)
                 print("Time to explode!")
                 self.exploded = True
                 self.explode()
@@ -193,6 +201,20 @@ class Bombs(pygame.sprite.Sprite):
         explosion_group.add(explosion)
 
         self.kill()
+
+    def handle_explosion_collision(self):
+        # Kolizja z graczem
+        player_collision = pygame.sprite.spritecollide(self, self.player, False)
+        if player_collision:
+            for player in player_collision:
+                if player and not player.is_dying:
+                    player.take_damage()
+
+        friend_collision = pygame.sprite.spritecollide(self, self.zombie_friend, False)
+        if friend_collision:
+            for friend in friend_collision:
+                if friend and not friend.is_dying:
+                    friend.take_damage()
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -331,7 +353,7 @@ class Explosion(pygame.sprite.Sprite):
         self.kill()
 
     def handle_explosion_collision(self):
-        self.kill() 
+        self.kill()
         
     def reset_bomb(self):
         self.animation_counter = 0
