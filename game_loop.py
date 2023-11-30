@@ -8,7 +8,6 @@ from load_image import LoadImage
 from menu import Menu
 from weapons import Explosion, HealthPack, BombsManager, KineticWeapon, Rocket, SelectedBomb, Bombs
 from level import Level
-from player import player_instance
 
 
 width, height = 1080, 720
@@ -27,17 +26,17 @@ class GameLoop:
         self.screen = pygame.display.set_mode((1080, 720))
         pygame.display.set_caption("The Running Zombie")
         self.selected_bomb_type = None
-        self.current_level_number = 4
+        self.current_level_number = 1
         self.current_level = Level(self.current_level_number, "playing")
         self.start_x = 0
         self.start_y = 0
         self.player = Player()
         self.zombie_friend = ZombieFriend()
         self.gui = Gui(self.player, bomb_button_positions, bomb_types)
-        self.bombs_manager = BombsManager(player_instance, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.weapons_group, bomb_types)
+        self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.weapons_group, bomb_types)
         self.explosion_group = pygame.sprite.Group()
         self.menu = Menu(self.screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
-        self.after_death_instance = AfterDeath(
+        self.after_death = AfterDeath(
             self.screen, LoadImage.death_screen, LoadImage.restart_button, LoadImage.exit_button
         )
         self.death_animation_started = False
@@ -69,9 +68,6 @@ class GameLoop:
         self.health_pack = HealthPack(x, y, self.all_sprites, self.player)
         self.health_packs_group.add(self.health_pack)
         self.all_sprites.add(self.player, self.health_pack)
-
-        explosion = Explosion(self.start_x, self.start_y, self.player, "start_game_explosion_type")
-        self.explosion_group.add(explosion)
 
         self.game_state = "playing"
         self.background_changed = False
@@ -145,14 +141,14 @@ class GameLoop:
         self.death_animation()
 
     def handle_death_screen_state(self):
-        selected_action = self.after_death_instance.run()
+        selected_action = self.after_death.run()
         if selected_action == "restart":
             self.restart_game()
             self.start_game()
         elif selected_action == "exit":
             self.running = False
         else:
-            self.after_death_instance.draw()
+            self.after_death.draw()
             pygame.display.flip()
             self.clock.tick(60)
 
@@ -163,11 +159,6 @@ class GameLoop:
         self.bombs_manager.update()
         self.current_level.update_background()
         self.handle_death()
-        
-        if self.current_level_number == 4 and not self.friend_appeared:
-            self.zombie_friend = ZombieFriend()
-            self.zombie_friend.set_target_position((width - 100, height - 100))
-            self.friend_appeared = True
 
         if self.zombie_friend:
             self.zombie_friend.update(camera_x)
@@ -190,7 +181,7 @@ class GameLoop:
         self.health_packs_group.update(self.camera_x)
         if self.health_pack and self.health_pack.has_changed_position:
             health_pack_position = (self.health_pack.rect.x, self.health_pack.rect.y)
-            player_instance.set_target_position(health_pack_position)
+            player.set_target_position(health_pack_position)
 
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
@@ -201,7 +192,7 @@ class GameLoop:
         for explosion in self.explosion_group:
             explosion.update(self.camera_x)
 
-        player_instance.update(self.camera_x)
+        player.update(self.camera_x)
 
         if self.death_animation_started:
             self.death_animation()
@@ -216,7 +207,7 @@ class GameLoop:
         self.clock.tick(60)
 
         if not self.running:
-            self.after_death_instance.draw()
+            self.after_death.draw()
             pygame.display.flip()
             pygame.time.delay(3000)
             pygame.quit()
@@ -293,7 +284,7 @@ class GameLoop:
         for health_pack in self.health_packs_group:
             health_pack.draw(self.screen, self.all_sprites)
 
-        player_instance.draw(self.screen)
+        player.draw(self.screen)
 
         if self.zombie_friend:
             self.zombie_friend.draw(self.screen)
@@ -331,13 +322,13 @@ class GameLoop:
             self.player.animate_death()
     
     def death_screen(self):
-        selected_action = self.after_death_instance.run()
+        selected_action = self.after_death.run()
         if selected_action == "restart":
             self.start_game()
         elif selected_action == "exit":
             self.running = False
         else:
-            self.after_death_instance.draw()
+            self.after_death.draw()
             pygame.display.flip()
             self.clock.tick(60)
 

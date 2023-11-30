@@ -200,11 +200,11 @@ class ZombieFriend(Player):
     def __init__(self):
         super().__init__()
         self.score = 0
-        self.walk_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (100, 100))
+        self.walk_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (200, 200))
                             for filename in LoadImage.zombie_friend_walk]
-        self.death_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (100, 100))
+        self.death_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (200, 200))
                              for filename in LoadImage.zombie_friend_dead]
-        self.playerstand_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (100, 100))
+        self.playerstand_images = [pygame.transform.scale(pygame.image.load(filename).convert_alpha(), (200, 200))
                                    for filename in LoadImage.zombie_friend_idle]
 
         self.image_index = 0
@@ -218,7 +218,7 @@ class ZombieFriend(Player):
         self.animation_delay = 5
         self.animation_counter = 0
         self.facing_left = False
-        self.health = 100
+        self.health = 1000
         self.is_dying = False
         self.idle_timer = 0
         self.idle_animation_delay = 50
@@ -357,20 +357,20 @@ class ZombieFriend(Player):
 
 
 
-player_instance = Player()
+player = Player()
 
 target_position = (500, 300)
-player_instance.set_target_position(target_position)
+player.set_target_position(target_position)
 
-zombie_friend_instance = ZombieFriend()
+zombie_friend = ZombieFriend()
 
-zombie_friend_instance.rect.bottomright = (width + 10, height - 2)
+zombie_friend.rect.bottomright = (width + 10, height - 2)
 
-menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
+menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 
 while True:
-    selected_action = menu_instance.handle_events()
+    selected_action = menu.handle_events()
     if selected_action == "start":
         break
-    menu_instance.draw()
+    menu.draw()
     pygame.display.flip()

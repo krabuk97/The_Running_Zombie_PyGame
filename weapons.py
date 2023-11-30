@@ -26,7 +26,7 @@ explosion_group = pygame.sprite.Group()
 health_packs_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
-menu_instance = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
+menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 
 
 class BombsManager:
@@ -481,7 +481,7 @@ class HealthPack(pygame.sprite.Sprite):
         self.spawn_interval = 5000
         self.spawn_timer = random.randint(0, self.spawn_interval)
         self.has_changed_position = False
-        self.player_instance = Player()
+        self.player = Player()
         self.current_health_packs = 0
         self.player = player
         self.all_sprites = all_sprites
@@ -523,4 +523,4 @@ class HealthPack(pygame.sprite.Sprite):
 
         if self.has_changed_position:
             health_pack_position = (self.rect.x, self.rect.y)
-            self.player_instance.set_target_position(health_pack_position)
+            self.player.set_target_position(health_pack_position)
