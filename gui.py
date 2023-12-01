@@ -10,6 +10,7 @@ pygame.display.set_caption("The Running Zombie")
 class Gui:
     def __init__(self, player, bomb_button_positions, bomb_types):
         self.player = player
+        self.screen = screen
         self.health_bar_full = player.health_bar_full
         self.health_bar_width = self.health_bar_full.get_width()
         self.health_bar_rect = self.health_bar_full.get_rect(topleft=(50, 50))
@@ -18,13 +19,13 @@ class Gui:
         self.bomb_button_positions = bomb_button_positions
         self.bomb_types = bomb_types
         self.selected_bomb_color = (255, 255, 255)
-
+        self.selected_bomb = None
         self.exit_button_image = pygame.transform.scale(
             pygame.image.load("image/exit_button.png").convert_alpha(), (50, 50)
         )
 
     def draw_exit_button(self):
-        screen.blit(self.exit_button_image, (10, 10))
+        self.screen.blit(self.exit_button_image, (10, 10))
 
     def handle_exit_button_click(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -50,17 +51,25 @@ class Gui:
                                                              (255, 255, 255))
         screen.blit(point_score_text, (width - point_score_text.get_width() - 100, 50))
 
-    def draw_bomb_buttons(self, selected_bomb):
+    def draw_bomb_buttons(self):
         for index, (position, bomb_type) in enumerate(zip(self.bomb_button_positions, self.bomb_types)):
-
             image_path = f"image/{bomb_type}.png"
             bomb_image = pygame.image.load(image_path).convert_alpha()
             bomb_image = pygame.transform.scale(bomb_image, (50, 50))
 
-            if selected_bomb == bomb_type:
-                bomb_image.fill(self.selected_bomb_color, special_flags=pygame.BLEND_RGBA_MULT)
+            # Ustaw kolor tylko dla wybranej bomby
+            if self.selected_bomb == bomb_type:
+                bomb_image.fill((255, 255, 255, 128), special_flags=pygame.BLEND_RGBA_MULT)
 
-            screen.blit(bomb_image, (position[0], position[1]))
+            self.screen.blit(bomb_image, (position[0], position[1]))
+
+    def handle_bomb_button_click(self, mouse_x, mouse_y):
+        for index, (position, bomb_type) in enumerate(zip(self.bomb_button_positions, self.bomb_types)):
+            button_rect = pygame.Rect(position[0], position[1], 50, 50)
+
+            if button_rect.collidepoint(mouse_x, mouse_y):
+                print(f"Bomb button {bomb_type} clicked")
+                self.selected_bomb = bomb_type
 
     def calculate_point_score(self):
         current_time = time.time()

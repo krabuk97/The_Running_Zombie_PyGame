@@ -25,7 +25,7 @@ class GameLoop:
         self.screen = pygame.display.set_mode((1080, 720))
         pygame.display.set_caption("The Running Zombie")
         self.selected_bomb_type = None
-        self.current_level_number = 4
+        self.current_level_number = 1
         self.current_level = Level(self.current_level_number, "playing")
         self.start_x = 0
         self.start_y = 0
@@ -41,7 +41,7 @@ class GameLoop:
             (1020, 650),
         ]
         bomb_types = ["rocket", "bomb_nuke", "bomb_reg", "frozen_bomb", "bomb_fire", "poison_bomb", "vork"]
-
+        
         self.selected_bomb = SelectedBomb()
         self.gui = Gui(self.player, self.bomb_button_positions, bomb_types)
         self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.weapons_group, bomb_types)
@@ -66,7 +66,7 @@ class GameLoop:
         self.target_group = pygame.sprite.Group()
         self.friend_appeared = False
 
-    def start_game(self, x, y):
+    def start_game(self):
         self.game_state = "playing"
         self.background_changed = False
 
@@ -77,7 +77,7 @@ class GameLoop:
 
         self.all_sprites.add(self.player)
 
-        self.health_pack = HealthPack(x, y, self.all_sprites)
+        self.health_pack = HealthPack(self.start_x, self.start_y, self.all_sprites)
         self.health_packs_group.add(self.health_pack)
         self.all_sprites.add(self.player, self.health_pack)
 
@@ -144,6 +144,8 @@ class GameLoop:
         if key in bomb_mapping:
             self.selected_bomb_type = bomb_mapping[key]
 
+            self.gui.draw_bomb_buttons()
+
     def handle_menu_state(self):
         selected_action = self.menu.handle_events()
         if selected_action == "start":
@@ -185,7 +187,7 @@ class GameLoop:
         if self.game_state == "playing":
             self.gui.draw_health_bar()
             self.gui.draw_point_score()
-            self.gui.draw_bomb_buttons(self.selected_bomb_type)
+            self.gui.draw_bomb_buttons()
             self.gui.draw_exit_button()
 
         for bomb in self.bombs_group:
@@ -202,7 +204,7 @@ class GameLoop:
         if self.zombie_friend:
             self.zombie_friend.draw(self.screen)
         self.gui.draw_point_score()
-        self.gui.draw_bomb_buttons(self.selected_bomb_type)
+        self.gui.draw_bomb_buttons()
 
     def update_game(self, camera_x):
         self.current_level.update_background()
@@ -313,7 +315,6 @@ class GameLoop:
         self.health_packs_group.empty()
 
         self.all_sprites.add(self.player)
-        self.health_pack = HealthPack(self.all_sprites, self.player)
         self.health_packs_group.add(self.health_pack)
         self.all_sprites.add(self.health_pack)
 

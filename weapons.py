@@ -388,7 +388,7 @@ class KineticWeapon(pygame.sprite.Sprite):
         screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
     def update(self, camera_x):
-        self.vertical_speed += self.gravity  # Apply gravity
+        self.vertical_speed += self.gravity
         dx = self.speed * math.cos(self.angle)
         dy = self.vertical_speed
 
@@ -417,7 +417,9 @@ class Rocket(pygame.sprite.Sprite):
         self.original_image = pygame.image.load("image/rocket.png").convert_alpha()
         self.original_image = pygame.transform.scale(self.original_image, (100, 100))
         self.image = self.original_image.copy()
-        self.speed = 1.5
+        self.speed = 0.5
+        self.acceleration = 0.1
+        self.max_speed = 5.0
         self.explosion_radius = 50
         self.radius = 20
         self.rect = self.image.get_rect(topleft=(x, y))
@@ -428,35 +430,42 @@ class Rocket(pygame.sprite.Sprite):
         self.weapons_group = weapons_group
         self.bomb_type = bomb_type
         self.target_group = target_group
+        self.upward_velocity = 0
+        self.launch_phase = 0
+        self.upward_duration = 500
+        self.horizontal_duration = 100
 
         all_sprites.add(self)
         weapons_group.add(self)
-
     
     def launch(self, player, start_x, start_y):
         self.rect.x, self.rect.y = start_x, start_y
         self.target = player.rect
-        dx = self.target.centerx - self.rect.centerx
-        dy = self.target.centery - self.rect.centery
-        self.rotate_towards_target(dx, dy)
-
+        self.upward_velocity = -3
+        self.horizontal_velocity = 0
+        self.launch_phase = 0
+    
     def rotate_towards_target(self, dx, dy, scale_factor=0.5):
-        dx = self.target.centerx - self.rect.centerx
-        dy = self.target.centery - self.rect.centery
-        angle = math.atan2(dy, dx)
-        rotated_image = pygame.transform.rotate(self.original_image, math.degrees(angle))
-        self.image = pygame.transform.scale(rotated_image, (100, 100))
-        self.rect = self.image.get_rect(center=self.rect.center)
+        if self.launch_phase == 1:  # Only rotate during the horizontal phase
+            angle = math.atan2(dy, dx)
+            rotated_image = pygame.transform.rotate(self.original_image, math.degrees(angle))
+            self.image = pygame.transform.scale(rotated_image, (100, 100))
+            self.rect = self.image.get_rect(center=self.rect.center)
+        elif self.launch_phase == 0:  # Rotate during the upward phase as well
+            upward_angle = math.atan2(-self.upward_velocity, self.horizontal_velocity)
+            rotated_image = pygame.transform.rotate(self.original_image, math.degrees(upward_angle))
+            self.image = pygame.transform.scale(rotated_image, (100, 100))
+            self.rect = self.image.get_rect(center=self.rect.center)
 
     def explode(self):
         print("Rocket exploded!")
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type="normal")
         self.all_sprites.add(explosion)
         self.weapons_group.remove(self)
-
+    
     def draw(self, screen, camera_x):
         screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
-
+    
     def update(self, camera_x):
         if not self.target:
             return
@@ -465,22 +474,34 @@ class Rocket(pygame.sprite.Sprite):
         dy = self.target.centery - self.rect.centery
 
         distance = math.sqrt(dx ** 2 + dy ** 2)
-        if distance > 0:
-            dx /= distance
-            dy /= distance
 
-        dx *= self.speed
-        dy *= self.speed
+        if self.launch_phase == 0:
+            self.rect.y += self.upward_velocity
+            if self.rect.y <= self.target.centery - self.upward_duration:
+                self.upward_velocity = 0
+                self.launch_phase = 1  
+                self.rotate_towards_target(dx, dy)
 
-        self.rect.x += dx
-        self.rect.y += dy
+        elif self.launch_phase == 1:
+            if distance > 0:
+                dx /= distance
+                dy /= distance
 
-        self.rotate_towards_target(dx, dy)
+            self.horizontal_velocity += self.acceleration
+            self.horizontal_velocity = min(self.horizontal_velocity, self.max_speed)
 
-        if pygame.sprite.spritecollide(self, self.target_group, False):
-            print("Rocket collided with target!")
-            self.explode()
-            self.kill()
+            dx *= self.horizontal_velocity
+            dy *= self.horizontal_velocity
+
+            self.rect.x += dx
+            self.rect.y += dy
+
+            self.rotate_towards_target(dx, dy)
+
+            if pygame.sprite.spritecollide(self, self.target_group, False):
+                print("Rocket collided with target!")
+                self.explode()
+                self.kill()
 
         if self.rect.bottom >= height and width:
             print("Rocket hit the ground!")
