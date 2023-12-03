@@ -184,7 +184,6 @@ class Bombs(pygame.sprite.Sprite):
 
         print(f"Bomb position after all checks: ({self.rect.x}, {self.rect.y})")
 
-
     def draw(self, screen, camera_x):
         screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
@@ -369,19 +368,15 @@ class KineticWeapon(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         self.rect.x = 1020
-        self.rect.y = random.randint(50, 720)
+        self.rect.y = random.randint(50, height // 2)
 
         self.player = player
         self.all_sprites = all_sprites
         self.weapons_group = weapons_group
         self.bomb_type = bomb_type
 
-        dx = self.player.rect.centerx - self.rect.centerx
-        dy = self.player.rect.centery - self.rect.centery
-        self.angle = math.atan2(dy, dx)
-
-        self.speed = 5
-        self.gravity = 0.1
+        self.speed = 10
+        self.gravity = 0.07
         self.vertical_speed = 0
 
     def draw(self, screen, camera_x):
@@ -389,6 +384,13 @@ class KineticWeapon(pygame.sprite.Sprite):
 
     def update(self, camera_x):
         self.vertical_speed += self.gravity
+
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        dx = mouse_x - self.rect.centerx
+        dy = mouse_y - self.rect.centery
+        self.angle = math.atan2(dy, dx)
+
         dx = self.speed * math.cos(self.angle)
         dy = self.vertical_speed
 
@@ -434,6 +436,7 @@ class Rocket(pygame.sprite.Sprite):
         self.launch_phase = 0
         self.upward_duration = 500
         self.horizontal_duration = 100
+        self.horizontal_velocity = 0
 
         all_sprites.add(self)
         weapons_group.add(self)
@@ -442,11 +445,10 @@ class Rocket(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = start_x, start_y
         self.target = player.rect
         self.upward_velocity = -3
-        self.horizontal_velocity = 0
         self.launch_phase = 0
     
     def rotate_towards_target(self, dx, dy, scale_factor=0.5):
-        if self.launch_phase == 1:  # Only rotate during the horizontal phase
+        if self.launch_phase == 1:
             angle = math.atan2(dy, dx)
             rotated_image = pygame.transform.rotate(self.original_image, math.degrees(angle))
             self.image = pygame.transform.scale(rotated_image, (100, 100))

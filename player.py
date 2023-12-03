@@ -58,7 +58,7 @@ class Player(pygame.sprite.Sprite):
 
     def add_weapon(self, weapon):
         self.weapons.add(weapon)
-    
+
     def update(self, camera_x):
         keys = pygame.key.get_pressed()
         any_key_pressed = any(keys)
@@ -88,8 +88,10 @@ class Player(pygame.sprite.Sprite):
                 dx /= distance
                 dy /= distance
 
+                # Speed factor based on distance
                 speed_factor = 1 + (distance / 100)
 
+                # Multiply by speed factor with the correct sign
                 speed_x = dx * self.speed * speed_factor
                 speed_y = dy * self.speed * speed_factor
 
@@ -209,7 +211,6 @@ class ZombieFriend(Player):
 
         self.image_index = 0
         self.image = self.walk_images[self.image_index]
-        self.image = pygame.transform.flip(self.image, True, False)
         self.rect = self.image.get_rect()
         self.rect.bottomleft = (width // + 1, height + 1)
         self.speed = 20
@@ -251,8 +252,10 @@ class ZombieFriend(Player):
                 dx /= distance
                 dy /= distance
 
+                # Speed factor based on distance
                 speed_factor = 1 + (distance / 100)
 
+                # Multiply by speed factor with the correct sign
                 speed_x = dx * self.speed * speed_factor
                 speed_y = dy * self.speed * speed_factor
 
@@ -359,12 +362,8 @@ class ZombieFriend(Player):
 
 player = Player()
 
-target_position = (500, 300)
-player.set_target_position(target_position)
-
 zombie_friend = ZombieFriend()
-
-zombie_friend.rect.bottomright = (width + 10, height - 10)
+zombie_friend.rect.bottomright = (width - 10, height - 10)
 
 menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 
@@ -372,5 +371,6 @@ while True:
     selected_action = menu.handle_events()
     if selected_action == "start":
         break
+
     menu.draw()
     pygame.display.flip()

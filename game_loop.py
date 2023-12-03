@@ -40,11 +40,11 @@ class GameLoop:
             (1020, 550),
             (1020, 650),
         ]
-        bomb_types = ["rocket", "bomb_nuke", "bomb_reg", "frozen_bomb", "bomb_fire", "poison_bomb", "vork"]
+        self.bomb_types = ["rocket", "bomb_nuke", "bomb_reg", "frozen_bomb", "bomb_fire", "poison_bomb", "vork"]
         
         self.selected_bomb = SelectedBomb()
-        self.gui = Gui(self.player, self.bomb_button_positions, bomb_types)
-        self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.weapons_group, bomb_types)
+        self.gui = Gui(self.player, self.bomb_button_positions, self.bomb_types)
+        self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.weapons_group, self.bomb_types)
         self.explosion_group = pygame.sprite.Group()
         self.menu = Menu(self.screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
         self.after_death = AfterDeath(
@@ -82,13 +82,13 @@ class GameLoop:
         self.all_sprites.add(self.player, self.health_pack)
 
     def run(self):
-        clock = pygame.time.Clock()
+        self.clock = pygame.time.Clock()
         while self.running:
             self.handle_events()
             self.draw_game()
             self.update_game(self.camera_x)
             pygame.display.flip()
-            clock.tick(60)
+            self.clock.tick(60)
 
             if not self.running:
                 self.after_death.draw()
@@ -157,7 +157,6 @@ class GameLoop:
     def handle_playing_state(self):
         if self.current_level_number in [4, 5, 6, 7] and not self.friend_appeared:
             self.zombie_friend = ZombieFriend()
-            self.zombie_friend.set_target_position((width - 100, height - 100))
             self.friend_appeared = True
 
         self.draw_game()
@@ -237,10 +236,6 @@ class GameLoop:
 
         self.health_packs_group.update(self.camera_x)
 
-        if self.health_pack and self.health_pack.has_changed_position:
-            health_pack_position = (self.health_pack.rect.x, self.health_pack.rect.y)
-            self.player.set_target_position(health_pack_position)
-
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
             if bomb.rect.colliderect(self.player.rect):
@@ -270,9 +265,6 @@ class GameLoop:
         self.clock.tick(60)
 
     def load_level(self):
-        if self.zombie_friend:
-            self.zombie_friend.rect.bottomleft = (width // + 10, height - 10)
-            self.zombie_friend.set_target_position((width - 100, height - 100))
 
         self.current_level_number += 1
         self.background_changed = False
@@ -281,19 +273,9 @@ class GameLoop:
 
         pygame.display.flip()
         pygame.time.delay(2000)
-    def setup_zombie_friend(self):
-        self.zombie_friend = ZombieFriend()
-
-        if self.zombie_friend:
-            self.zombie_friend.rect.bottomleft = (width // + 10, height - 2)
-            self.zombie_friend.set_target_position((width - 100, height - 100))
 
     def setup_zombie_friend(self):
         self.zombie_friend = ZombieFriend()
-
-        if self.zombie_friend:
-            self.zombie_friend.rect.bottomleft = (width // + 10, height - 2)
-            self.zombie_friend.set_target_position((width - 100, height - 100))
 
     def update_background(self):
         if self.game_state == "death_screen" and not self.background_changed:
@@ -336,14 +318,14 @@ class GameLoop:
             self.screen.blit(bomb.image, (bomb.rect.x - self.camera_x, bomb.rect.y))
 
     def handle_death(self):
-        if self.player.health <= 0:
+        if self.player.health <= 0 and not self.player.is_dying:
             self.player.is_dying = True
             self.time_of_death = pygame.time.get_ticks()
-    
+
         if self.player.is_dying and not self.death_animation_started:
             self.death_animation_started = True
             self.game_state = "death_animation"
-    
+
     def death_animation(self):
         current_time = pygame.time.get_ticks()
         if current_time - self.time_of_death >= self.death_animation_duration:

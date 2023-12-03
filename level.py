@@ -59,6 +59,7 @@ class Level:
     def should_change_level(self):
         return self.player.is_dying
 
-    def get_load_screen(self):
+    @staticmethod
+    def get_load_screen():
         load_screen_image = pygame.transform.scale(pygame.image.load("image/load_screen1.jpeg").convert_alpha(), (1080, 720))
         return load_screen_image
