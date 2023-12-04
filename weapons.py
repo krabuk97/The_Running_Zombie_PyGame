@@ -2,7 +2,8 @@ import random
 import pygame
 from load_image import LoadImage
 from menu import Menu
-from player import Player, ZombieFriend
+from player import Player 
+from zombie_friend import ZombieFriend
 import math
 
 pygame.init()
@@ -162,28 +163,17 @@ class Bombs(pygame.sprite.Sprite):
             self.image = pygame.image.load("image/poison_bomb.png").convert_alpha()
 
     def update(self, camera_x):
-        print(f"Bomb position before update: ({self.rect.x}, {self.rect.y})")
-
         if not self.exploded:
             self.rect.y += self.speed
 
-            print(f"Bomb position after update: ({self.rect.x}, {self.rect.y})")
-
             if self.rect.bottom >= height:
                 self.time_since_landing += 1
-                print("Bomb reached the bottom")
-
-            if self.time_since_landing >= 180:  # Zmieniłem 3 sekundy na 180 klatek (60 FPS * 3 sekundy)
-                print("Time to explode!")
+            if self.time_since_landing >= 180:
                 self.exploded = True
                 self.explode()
-                print("Bomb exploded!")
-
             if self.rect.bottom > height:
                 self.rect.bottom = height
-
-        print(f"Bomb position after all checks: ({self.rect.x}, {self.rect.y})")
-
+                
     def draw(self, screen, camera_x):
         screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
@@ -202,161 +192,17 @@ class Bombs(pygame.sprite.Sprite):
         self.kill()
 
     def handle_explosion_collision(self):
-        # Kolizja z graczem
         player_collision = pygame.sprite.spritecollide(self, self.player, False)
         if player_collision:
             for player in player_collision:
                 if player and not player.is_dying:
                     player.take_damage()
 
-        friend_collision = pygame.sprite.spritecollide(self, self.zombie_friend, False)
-        if friend_collision:
-            for friend in friend_collision:
+        zombie_friend_collision = pygame.sprite.spritecollide(self, self.zombie_friend_group, False)
+        if zombie_friend_collision:
+            for friend in zombie_friend_collision:
                 if friend and not friend.is_dying:
                     friend.take_damage()
-
-
-class Explosion(pygame.sprite.Sprite):
-    TARGET_SIZE = (150, 150)
-
-    def __init__(self, x, y, player, explosion_type):
-        super().__init__()
-
-        self.player = player
-        self.explosion_type = explosion_type
-        self.animation_delay = 100
-        self.animation_counter = 0
-        self.animation_start_time = pygame.time.get_ticks()
-        self.finished = False
-        self.distance_threshold = 0
-        self.damage_amount = 0
-        self.images = []
-        self.camera_x = 0
-        self.bombs_group = bombs_group
-
-        self.load_explosion_images()
-
-        self.image_index = 0
-
-        if self.images and len(self.images) > 0:
-            self.rect = self.images[0].get_rect(center=(x, y))
-            self.image = self.images[self.image_index]
-        else:
-            self.rect = pygame.Rect(x, y, 0, 0)
-            self.image = pygame.Surface((0, 0))
-
-    def load_explosion_images(self):
-        if self.explosion_type == "normal" or self.explosion_type == "regular" or self.explosion_type == "rocket":
-            explosion_images = LoadImage.explosion_files
-            self.distance_threshold = 90
-            self.damage_amount = 10 if self.explosion_type == "normal" else 50
-        elif self.explosion_type == "nuke":
-            explosion_images = LoadImage.nuke
-            self.distance_threshold = 250
-            self.damage_amount = 50
-        elif self.explosion_type == "frozen":
-            explosion_images = LoadImage.frozen_bomb
-            self.distance_threshold = 90
-            self.damage_amount = 0
-        elif self.explosion_type == "poison":
-            explosion_images = LoadImage.poison_bomb
-            self.distance_threshold = 90
-            self.damage_amount = 0
-        elif self.explosion_type == "burn" or self.explosion_type == "fire":
-            explosion_images = LoadImage.burn
-            self.distance_threshold = 90
-            self.damage_amount = 0
-        elif self.explosion_type == "vork" and hasattr(LoadImage, "vork_explosion"):
-            explosion_images = LoadImage.vork_explosion
-            self.distance_threshold = 0
-            self.damage_amount = 0
-        else:
-            # Obsługa nieznanych typów wybuchów
-            print(f"Unknown explosion_type: {self.explosion_type}")
-            return
-
-        original_images = [
-            pygame.image.load(image_path).convert_alpha()
-            for image_path in explosion_images
-        ]
-
-        self.images = [
-            pygame.transform.smoothscale(img, Explosion.TARGET_SIZE)
-            for img in original_images
-        ]
-
-    def update(self, camera_x):
-        self.camera_x = camera_x
-        current_time = pygame.time.get_ticks()
-        elapsed_time = current_time - self.animation_start_time
-
-        if elapsed_time >= self.animation_delay:
-            self.animation_counter += 1
-            self.animation_start_time = current_time
-
-        if self.animation_counter < len(self.images):
-            self.image = self.images[self.animation_counter]
-
-        self.rect.x = self.rect.x - self.camera_x
-
-        if self.rect.bottom > height:
-            self.rect.bottom = height
-
-        if self.rect.bottom < height and self.animation_counter >= len(self.images) - 1 and not self.finished:
-            self.finished = True
-            self.handle_collisions()
-            self.kill()
-
-        if self.finished and self.rect.bottom >= height:
-            self.kill()
-
-    def draw(self, screen):
-        screen.blit(self.image, (self.rect.x - self.camera_x, self.rect.y))
-
-    def handle_collisions(self):
-        if self.player:
-            player_rect = self.player.rect
-            player_center_x = player_rect.centerx
-            player_bottom = player_rect.bottom
-
-            # Sprawdź kolizje z graczem
-            distance_squared = (player_center_x - self.rect.centerx) ** 2 + (
-                    player_bottom - self.rect.bottom) ** 2
-
-            if distance_squared <= self.distance_threshold ** 2:
-                self.handle_player_collision()
-
-            # Sprawdź kolizje z innymi bombami w zasięgu wybuchu
-            bombs_hit = pygame.sprite.spritecollide(self, self.bombs_group, False)
-            for bomb in bombs_hit:
-                if bomb != self:
-                    bomb.handle_explosion_collision()
-
-    def handle_player_collision(self):
-        # Logika obsługi kolizji z graczem
-        if self.explosion_type == "frozen":
-            self.player.frozen = True
-            self.player.frozen_duration = 5
-        elif self.explosion_type == "poison":
-            self.player.poison = True
-            self.player.poison_duration = 5
-        elif self.explosion_type == "burn":
-            self.player.burn = True
-            self.player.burn_duration = 10
-        elif self.explosion_type == "vork":
-            self.player.slow_duration = 420
-            self.player.slow_start_time = pygame.time.get_ticks()
-            self.player.slow_counter = 0
-
-        self.player.health -= self.damage_amount
-        self.kill()
-
-    def handle_explosion_collision(self):
-        self.kill()
-        
-    def reset_bomb(self):
-        self.animation_counter = 0
-        self.finished = False
 
 
 class KineticWeapon(pygame.sprite.Sprite):
@@ -511,61 +357,141 @@ class Rocket(pygame.sprite.Sprite):
             self.kill()
 
 
-class HealthPack(pygame.sprite.Sprite):
-    max_health_packs = 5
+class Explosion(pygame.sprite.Sprite):
+    TARGET_SIZE = (150, 150)
 
-    def __init__(self, x, y, all_sprites):
+    def __init__(self, x, y, player, explosion_type):
         super().__init__()
-        self.all_sprites = all_sprites
-        self.image = pygame.image.load('image/health_pack.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (60, 60))
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-        self.take = False
-        self.speed = 4
-        self.spawn_interval = 5000
-        self.spawn_timer = random.randint(0, self.spawn_interval)
-        self.has_changed_position = False
-        self.player = Player()
-        self.current_health_packs = 0
+
         self.player = player
-        self.all_sprites = all_sprites
+        self.explosion_type = explosion_type
+        self.animation_delay = 100
+        self.animation_counter = 0
+        self.animation_start_time = pygame.time.get_ticks()
+        self.finished = False
+        self.distance_threshold = 0
+        self.damage_amount = 0
+        self.images = []
+        self.camera_x = 0
+        self.bombs_group = bombs_group
 
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
+        self.load_explosion_images()
 
-    def random_health_pack(self, x, y):
-        if self.spawn_timer <= 0 and self.current_health_packs < self.max_health_packs:
-            health_pack = HealthPack(x, y, self.all_sprites, self.player)
-            self.all_sprites.add(health_pack)
-            self.current_health_packs += 1
+        self.image_index = 0
 
-    def collect(self, player):
-        if player.health < 100:
-            player.health += 50
-            if player.health > 100:
-                player.health = 100
-            self.take = True
-            self.current_health_packs -= 1
+        if self.images and len(self.images) > 0:
+            self.rect = self.images[0].get_rect(center=(x, y))
+            self.image = self.images[self.image_index]
+        else:
+            self.rect = pygame.Rect(x, y, 0, 0)
+            self.image = pygame.Surface((0, 0))
+
+    def load_explosion_images(self):
+        if self.explosion_type == "normal" or self.explosion_type == "regular" or self.explosion_type == "rocket":
+            explosion_images = LoadImage.explosion_files
+            self.distance_threshold = 90
+            self.damage_amount = 10 if self.explosion_type == "normal" else 50
+        elif self.explosion_type == "nuke":
+            explosion_images = LoadImage.nuke
+            self.distance_threshold = 250
+            self.damage_amount = 50
+        elif self.explosion_type == "frozen":
+            explosion_images = LoadImage.frozen_bomb
+            self.distance_threshold = 90
+            self.damage_amount = 0
+        elif self.explosion_type == "poison":
+            explosion_images = LoadImage.poison_bomb
+            self.distance_threshold = 90
+            self.damage_amount = 0
+        elif self.explosion_type == "burn" or self.explosion_type == "fire":
+            explosion_images = LoadImage.burn
+            self.distance_threshold = 90
+            self.damage_amount = 0
+        elif self.explosion_type == "vork" and hasattr(LoadImage, "vork_explosion"):
+            explosion_images = LoadImage.vork_explosion
+            self.distance_threshold = 0
+            self.damage_amount = 0
+        else:
+            print(f"Unknown explosion_type: {self.explosion_type}")
+            return
+
+        original_images = [
+            pygame.image.load(image_path).convert_alpha()
+            for image_path in explosion_images
+        ]
+
+        self.images = [
+            pygame.transform.smoothscale(img, Explosion.TARGET_SIZE)
+            for img in original_images
+        ]
 
     def update(self, camera_x):
-        self.random_health_pack()
+        self.camera_x = camera_x
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - self.animation_start_time
 
-        if self.take:
+        if elapsed_time >= self.animation_delay:
+            self.animation_counter += 1
+            self.animation_start_time = current_time
+
+        if self.animation_counter < len(self.images):
+            self.image = self.images[self.animation_counter]
+
+        self.rect.x = self.rect.x - self.camera_x
+
+        if self.rect.bottom > height:
+            self.rect.bottom = height
             self.kill()
-        else:
-            self.rect.y += self.speed
 
-            if self.rect.bottom > height:
-                self.kill()
+        if self.rect.bottom < height and self.animation_counter >= len(self.images) - 1 and not self.finished:
+            self.finished = True
+            self.handle_collisions()
+            self.kill()
 
-            hits = pygame.sprite.spritecollide(self, self.all_sprites, False)
-            for hit in hits:
-                if not self.take and isinstance(hit, Player):
-                    self.collect(hit)
+        if self.finished and self.rect.bottom >= height:
+            self.kill()
 
-        self.spawn_timer -= pygame.time.get_ticks() % self.spawn_interval
+    def draw(self, screen):
+        screen.blit(self.image, (self.rect.x - self.camera_x, self.rect.y))
 
-        if self.has_changed_position:
-            health_pack_position = (self.rect.x, self.rect.y)
-            self.player.set_target_position(health_pack_position)
+    def handle_collisions(self):
+        if self.player:
+            player_rect = self.player.rect
+            player_center_x = player_rect.centerx
+            player_bottom = player_rect.bottom
+
+            distance_squared = (player_center_x - self.rect.centerx) ** 2 + (
+                    player_bottom - self.rect.bottom) ** 2
+
+            if distance_squared <= self.distance_threshold ** 2:
+                self.handle_player_collision()
+
+            bombs_hit = pygame.sprite.spritecollide(self, self.bombs_group, False)
+            for bomb in bombs_hit:
+                if bomb != self:
+                    bomb.handle_explosion_collision()
+
+    def handle_player_collision(self):
+        if self.explosion_type == "frozen":
+            self.player.frozen = True
+            self.player.frozen_duration = 5
+        elif self.explosion_type == "poison":
+            self.player.poison = True
+            self.player.poison_duration = 5
+        elif self.explosion_type == "burn":
+            self.player.burn = True
+            self.player.burn_duration = 10
+        elif self.explosion_type == "vork":
+            self.player.slow_duration = 420
+            self.player.slow_start_time = pygame.time.get_ticks()
+            self.player.slow_counter = 0
+
+        self.player.health -= self.damage_amount
+        self.kill()
+
+    def handle_explosion_collision(self):
+        self.kill()
+
+    def reset_bomb(self):
+        self.animation_counter = 0
+        self.finished = False

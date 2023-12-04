@@ -1,27 +1,34 @@
 import pygame
 import sys
+import random
 from after_death import AfterDeath
-from player import Player, ZombieFriend
+from player import Player
+from zombie_friend import ZombieFriend
 from gui import Gui
 from load_image import LoadImage
 from menu import Menu
-from weapons import Explosion, HealthPack, BombsManager, KineticWeapon, Rocket, SelectedBomb, Bombs
+from weapons import Explosion, BombsManager, KineticWeapon, Rocket, SelectedBomb, Bombs
 from level import Level
+from health_pack import HealthPack
 
 
 width, height = 1080, 720
-screen = pygame.display.set_mode((width, height))
-bomb_types = ["rocket", "nuke", "regular", "frozen", "fire", "poison", "vork"]
 
 
 class GameLoop:
-    def __init__(self):
+    def __init__(self, width, height):
         pygame.init()
+        self.width = width
+        self.height = height
+        self.screen = pygame.display.set_mode((width, height))
+        self.bomb_types = ["rocket", "nuke", "regular", "frozen", "fire", "poison", "vork"]
         self.all_sprites = pygame.sprite.Group()
         self.bombs_group = pygame.sprite.Group()
         self.kinetic_weapons_group = pygame.sprite.Group()
         self.weapons_group = pygame.sprite.Group()
         self.health_packs_group = pygame.sprite.Group()
+        self.health_pack_spawn_interval = 120000
+        self.health_pack_spawn_timer = 0
         self.screen = pygame.display.set_mode((1080, 720))
         pygame.display.set_caption("The Running Zombie")
         self.selected_bomb_type = None
@@ -31,6 +38,7 @@ class GameLoop:
         self.start_y = 0
         self.player = Player()
         self.zombie_friend = ZombieFriend()
+        self.zombie_friend.rect.bottomright = (width - 10, height - 10)
         self.bomb_button_positions = [
             (1020, 50),
             (1020, 150),
@@ -65,21 +73,14 @@ class GameLoop:
         self.health_pack = None
         self.target_group = pygame.sprite.Group()
         self.friend_appeared = False
+        self.spawn_health_pack()
 
     def start_game(self):
         self.game_state = "playing"
         self.background_changed = False
-
-        self.player = Player()
-        self.all_sprites.empty()
-        self.bombs_group.empty()
-        self.health_packs_group.empty()
-
-        self.all_sprites.add(self.player)
-
-        self.health_pack = HealthPack(self.start_x, self.start_y, self.all_sprites)
-        self.health_packs_group.add(self.health_pack)
-        self.all_sprites.add(self.player, self.health_pack)
+        self.player = Player(self.width, self.height)
+        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites.add(self.player, self.zombie_friend)
 
     def run(self):
         self.clock = pygame.time.Clock()
@@ -93,9 +94,7 @@ class GameLoop:
             if not self.running:
                 self.after_death.draw()
                 pygame.display.flip()
-                pygame.time.delay(3000)
-                pygame.quit()
-                sys.exit()
+                self.handle_after_death_events()
 
             if self.player.score == 100:
                 self.death_screen()
@@ -103,8 +102,11 @@ class GameLoop:
             if self.should_change_level():
                 self.load_level()
 
-            pygame.display.flip()
-            self.clock.tick(60)
+    def handle_after_death_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -143,39 +145,7 @@ class GameLoop:
 
         if key in bomb_mapping:
             self.selected_bomb_type = bomb_mapping[key]
-
             self.gui.draw_bomb_buttons()
-
-    def handle_menu_state(self):
-        selected_action = self.menu.handle_events()
-        if selected_action == "start":
-            self.start_game()
-            self.game_state = "playing"
-        elif selected_action == "exit":
-            self.running = False
-
-    def handle_playing_state(self):
-        if self.current_level_number in [4, 5, 6, 7] and not self.friend_appeared:
-            self.zombie_friend = ZombieFriend()
-            self.friend_appeared = True
-
-        self.draw_game()
-        self.update_game(self.camera_x)
-
-    def handle_death_animation_state(self):
-        self.death_animation()
-
-    def handle_death_screen_state(self):
-        selected_action = self.after_death.run()
-        if selected_action == "restart":
-            self.restart_game()
-            self.start_game()
-        elif selected_action == "exit":
-            self.running = False
-        else:
-            self.after_death.draw()
-            pygame.display.flip()
-            self.clock.tick(60)
 
     def draw_game(self):
         current_background = self.current_level.get_current_background()
@@ -194,9 +164,6 @@ class GameLoop:
 
         for explosion in self.explosion_group:
             explosion.draw(self.screen)
-
-        for health_pack in self.health_packs_group:
-            health_pack.draw(self.screen, self.all_sprites)
 
         self.player.draw(self.screen)
 
@@ -234,7 +201,7 @@ class GameLoop:
             self.zombie_friend.update(camera_x)
             self.all_sprites.add(self.zombie_friend)
 
-        self.health_packs_group.update(self.camera_x)
+        self.check_health_pack_spawn()
 
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
@@ -342,8 +309,22 @@ class GameLoop:
             pygame.display.flip()
             self.clock.tick(60)
 
+    def spawn_health_pack(self):
+        x = random.randint(50, width - 50)
+        y = 0
+        health_pack = HealthPack(x, y, self.all_sprites)
+        self.health_packs_group.add(health_pack)
+
+    def check_health_pack_spawn(self):
+        self.health_pack_spawn_timer += self.clock.tick(60)
+        if self.health_pack_spawn_timer >= self.health_pack_spawn_interval:
+            self.spawn_health_pack()
+            self.health_pack_spawn_timer = 0
+
 
 if __name__ == "__main__":
+    width, height = 1080, 720
+    game_loop = GameLoop(width, height)
     player = Player()
-    game_loop = GameLoop()
     game_loop.run()
+    

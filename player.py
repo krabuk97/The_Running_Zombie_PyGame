@@ -252,10 +252,8 @@ class ZombieFriend(Player):
                 dx /= distance
                 dy /= distance
 
-                # Speed factor based on distance
                 speed_factor = 1 + (distance / 100)
 
-                # Multiply by speed factor with the correct sign
                 speed_x = dx * self.speed * speed_factor
                 speed_y = dy * self.speed * speed_factor
 
@@ -363,7 +361,6 @@ class ZombieFriend(Player):
 player = Player()
 
 zombie_friend = ZombieFriend()
-zombie_friend.rect.bottomright = (width - 10, height - 10)
 
 menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
 
