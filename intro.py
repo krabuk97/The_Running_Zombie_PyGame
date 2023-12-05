@@ -46,8 +46,8 @@ class Intro:
             frame = self.intro_frames[self.current_frame]
 
             # Calculate the position to center the frame on the screen
-            x_offset = 20  # Adjust the horizontal offset as needed
-            y_offset = 20   # Adjust the vertical offset as needed
+            x_offset = 0  # Adjust the horizontal offset as needed
+            y_offset = 0   # Adjust the vertical offset as needed
 
             frame_surface = pygame.surfarray.make_surface(frame)
             self.screen.blit(frame_surface, (x_offset, y_offset))

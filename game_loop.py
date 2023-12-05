@@ -86,18 +86,8 @@ class GameLoop:
         self.all_sprites.add(self.player, self.zombie_friend)
 
     def run(self):
-        self.intro.play_intro()  # Odtwarzaj intro przed rozpoczęciem gry
-
         self.clock = pygame.time.Clock()
         while self.running:
-            if not self.intro.intro_finished:  # Sprawdź, czy intro jeszcze trwa
-                self.handle_intro_events()  # Obsługuj zdarzenia intro
-                self.intro.draw_intro()  # Rysuj klatki intro
-                pygame.display.flip()
-                self.clock.tick(30)  # Możesz dostosować częstotliwość odświeżania intro
-                continue  # Przejdź do następnej iteracji pętli
-
-            # Główna pętla gry
             self.handle_events()
             self.draw_game()
             self.update_game(self.camera_x)
@@ -114,14 +104,6 @@ class GameLoop:
 
             if self.should_change_level():
                 self.load_level()
-
-    def handle_intro_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                self.intro.intro_finished = True
 
     def handle_after_death_events(self):
         for event in pygame.event.get():
