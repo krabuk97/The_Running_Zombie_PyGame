@@ -109,6 +109,19 @@ files = [
 ]
 
 [[package]]
+name = "ghhu"
+version = "0.1"
+description = "Projeto de Exemplo para curso no Hotel Urbano"
+optional = false
+python-versions = "*"
+files = [
+    {file = "ghhu-0.1.tar.gz", hash = "sha256:43e133a8118754dc5a4f83ec96f431f6d6f6e33f5bc5bb5da1b99abfd42fb3c7"},
+]
+
+[package.dependencies]
+requests = "2.10.0"
+
+[[package]]
 name = "git-python"
 version = "1.0.3"
 description = "combination and simplification of some useful git commands"
@@ -853,6 +866,21 @@ files = [
 ]
 
 [[package]]
+name = "requests"
+version = "2.10.0"
+description = "Python HTTP for Humans."
+optional = false
+python-versions = "*"
+files = [
+    {file = "requests-2.10.0-py2.py3-none-any.whl", hash = "sha256:09bc1b5f3a56cd8c48d433213a8cba51a67d12936568f73b5f1793fcb0c0979e"},
+    {file = "requests-2.10.0.tar.gz", hash = "sha256:63f1815788157130cee16a933b2ee184038e975f0017306d723ac326b5525b54"},
+]
+
+[package.extras]
+security = ["ndg-httpsclient", "pyOpenSSL (>=0.13)", "pyasn1"]
+socks = ["PySocks (>=1.5.6)"]
+
+[[package]]
 name = "scipy"
 version = "1.11.3"
 description = "Fundamental algorithms for scientific computing in Python"
@@ -1091,4 +1119,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10.0,<3.11"
-content-hash = "291f937b2caf12bf3cdbf2f662d84a138aecccf9025575c4a8f3c14bfe7f4c34"
+content-hash = "a05084aaaa9df4bb17542853d6f4ec0e188b426548083647976e7342ab761b8a"
