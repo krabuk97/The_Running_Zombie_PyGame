@@ -363,11 +363,3 @@ player = Player()
 zombie_friend = ZombieFriend()
 
 menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
-
-while True:
-    selected_action = menu.handle_events()
-    if selected_action == "start":
-        break
-
-    menu.draw()
-    pygame.display.flip()

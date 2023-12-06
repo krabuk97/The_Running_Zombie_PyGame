@@ -63,7 +63,6 @@ class GameLoop:
         self.running = True
         self.clock = pygame.time.Clock()
         self.camera_x = 0
-        self.game_state = "menu"
         self.death_animation_duration = 5000
         self.death_animation_start_time = 3000
         self.current_background_index = 0
@@ -77,6 +76,7 @@ class GameLoop:
         self.spawn_health_pack()
         self.intro = Intro(self.screen, 'intro.mp4')
         self.game_state = "intro"
+        self.game_state = "menu"
 
     def start_game(self):
         self.game_state = "playing"
@@ -86,6 +86,19 @@ class GameLoop:
         self.all_sprites.add(self.player, self.zombie_friend)
 
     def run(self):
+        self.intro.play_intro()
+        self.menu_loop()
+
+    def menu_loop(self):
+        selected_action = None
+        while selected_action != "start":
+            selected_action = self.menu.handle_events()
+            self.menu.draw()
+            pygame.display.flip()
+
+        self.game_loop()
+
+    def game_loop(self):
         self.clock = pygame.time.Clock()
         while self.running:
             self.handle_events()
@@ -104,6 +117,7 @@ class GameLoop:
 
             if self.should_change_level():
                 self.load_level()
+
 
     def handle_after_death_events(self):
         for event in pygame.event.get():
