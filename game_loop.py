@@ -1,16 +1,16 @@
 import pygame
 import sys
 import random
-from after_death import AfterDeath
-from player import Player
-from zombie_friend import ZombieFriend
-from gui import Gui
-from load_image import LoadImage
 from menu import Menu
-from weapons import Explosion, BombsManager, KineticWeapon, Rocket, SelectedBomb, Bombs
+from after_death import AfterDeath
 from level import Level
+from load_image import LoadImage
+from player import Player
+from weapons import Explosion, BombsManager, KineticWeapon, Rocket, SelectedBomb, Bombs
 from health_pack import HealthPack
 from intro import Intro
+from zombie_friend import ZombieFriend
+from gui import Gui
 
 
 width, height = 1080, 720
@@ -30,9 +30,8 @@ class GameLoop:
         self.health_packs_group = pygame.sprite.Group()
         self.health_pack_spawn_interval = 120000
         self.health_pack_spawn_timer = 0
-        self.screen = pygame.display.set_mode((1080, 720))
         pygame.display.set_caption("The Running Zombie")
-        self.selected_bomb_type = None
+        self.selected_bomb_type = "regular"
         self.current_level_number = 1
         self.current_level = Level(self.current_level_number, "playing")
         self.start_x = 0
@@ -49,8 +48,6 @@ class GameLoop:
             (1020, 550),
             (1020, 650),
         ]
-        self.bomb_types = ["rocket", "bomb_nuke", "bomb_reg", "frozen_bomb", "bomb_fire", "poison_bomb", "vork"]
-        
         self.selected_bomb = SelectedBomb()
         self.gui = Gui(self.player, self.bomb_button_positions, self.bomb_types)
         self.bombs_manager = BombsManager(self.player, self.all_sprites, self.bombs_group, self.kinetic_weapons_group, self.weapons_group, self.bomb_types)
@@ -74,8 +71,8 @@ class GameLoop:
         self.target_group = pygame.sprite.Group()
         self.friend_appeared = False
         self.spawn_health_pack()
-        self.intro = Intro(self.screen, 'intro.mp4')
         self.game_state = "intro"
+        self.intro = Intro(self.screen, 'intro.mp4')
         self.game_state = "menu"
 
     def start_game(self):
@@ -96,10 +93,13 @@ class GameLoop:
             self.menu.draw()
             pygame.display.flip()
 
+            if selected_action == "exit":
+                pygame.quit()
+                sys.exit()
+
         self.game_loop()
 
     def game_loop(self):
-        self.clock = pygame.time.Clock()
         while self.running:
             self.handle_events()
             self.draw_game()
@@ -136,7 +136,7 @@ class GameLoop:
                 self.handle_bomb_selection(event.key)
 
     def handle_bomb_placement(self, mouse_x, mouse_y):
-        if self.selected_bomb_type:
+        if handle_after_death_events:
             if self.selected_bomb_type == "rocket":
                 new_rocket = Rocket(self.player, self.all_sprites, self.weapons_group, self.target_group, mouse_x, mouse_y,
                                     bomb_type="rocket", scale_factor=0.3)
@@ -245,9 +245,6 @@ class GameLoop:
         if self.should_change_level():
             self.load_level()
 
-        pygame.display.flip()
-        self.clock.tick(60)
-
     def load_level(self):
 
         self.current_level_number += 1
@@ -270,7 +267,7 @@ class GameLoop:
             self.background_changed = False
 
     def should_change_level(self):
-        return self.player.is_dying
+        return self.player.is_player_dead()
 
     def restart_game(self):
         self.background_changed = False
@@ -333,7 +330,7 @@ class GameLoop:
         self.health_packs_group.add(health_pack)
 
     def check_health_pack_spawn(self):
-        self.health_pack_spawn_timer += self.clock.tick(60)
+        self.health_pack_spawn_timer += self.clock.tick(1800)
         if self.health_pack_spawn_timer >= self.health_pack_spawn_interval:
             self.spawn_health_pack()
             self.health_pack_spawn_timer = 0

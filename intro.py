@@ -14,16 +14,6 @@ class Intro:
         self.clock = pygame.time.Clock()
         self.intro_finished = False
 
-    def load_intro(self):
-        self.intro_frames = []
-        with imageio.get_reader(self.intro_file_path) as reader:
-            for frame in reader:
-                img = Image.fromarray(frame)
-                img = img.rotate(-90, expand=True)
-                img = img.resize((720, 1080), Image.LANCZOS)  # Use LANCZOS for antialiasing
-                frame = np.array(img)
-                self.intro_frames.append(frame)
-
     def play_intro(self):
         self.load_intro()
 
@@ -41,16 +31,28 @@ class Intro:
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.intro_finished = True
 
+    def load_intro(self):
+        with imageio.get_reader(self.intro_file_path) as reader:
+            for frame in reader:
+                img = Image.fromarray(frame)
+                img = img.rotate(-90, expand=True)
+                img = img.resize((720, 1080), Image.LANCZOS)
+                frame = np.array(img)
+                self.intro_frames.append(frame)
+
     def draw_intro(self):
         try:
             frame = self.intro_frames[self.current_frame]
 
-            # Calculate the position to center the frame on the screen
-            x_offset = 0  # Adjust the horizontal offset as needed
-            y_offset = 0   # Adjust the vertical offset as needed
+            frame = np.flipud(frame)
+            frame = np.fliplr(frame)
+
+            x_offset = 0
+            y_offset = 0
 
             frame_surface = pygame.surfarray.make_surface(frame)
             self.screen.blit(frame_surface, (x_offset, y_offset))
             self.current_frame += 1
         except IndexError:
             self.intro_finished = True
+

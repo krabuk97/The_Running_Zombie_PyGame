@@ -144,6 +144,9 @@ class Player(pygame.sprite.Sprite):
         if self.health <= 0:
             self.is_dying = True
 
+    def is_player_dead(self):
+        return self.health <= 0 and not self.is_dying
+
     def handle_frozen(self):
         self.frozen_duration += 1
         if self.frozen_duration >= 180:
