@@ -197,6 +197,7 @@ class Player(pygame.sprite.Sprite):
 
         self.weapons.draw(screen)
 
+
 player = Player()
 
 menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)

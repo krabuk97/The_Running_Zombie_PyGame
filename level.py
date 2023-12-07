@@ -59,4 +59,3 @@ class Level:
 
     def should_change_level(self):
         return self.player.is_dying
-

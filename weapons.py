@@ -6,6 +6,7 @@ from player import Player
 from zombie_friend import ZombieFriend
 import math
 
+
 pygame.init()
 
 width, height = 1080, 720
@@ -25,7 +26,6 @@ death_screen = pygame.transform.scale(LoadImage.death_screen, (width, height))
 
 bombs_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
-health_packs_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 
 menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit_button)
@@ -85,7 +85,7 @@ class Bombs(pygame.sprite.Sprite):
 
     def explode(self):
         explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
-
+        from explosion import Explosion
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
         explosion_group.add(explosion)
 
@@ -207,6 +207,7 @@ class Rocket(pygame.sprite.Sprite):
 
     def explode(self):
         print("Rocket exploded!")
+        from explosion import Explosion
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type="normal")
         self.all_sprites.add(explosion)
         self.weapons_group.remove(self)
