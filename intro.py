@@ -23,6 +23,11 @@ class Intro:
             pygame.display.flip()
             self.clock.tick(30)
 
+        self.screen.fill((0, 0, 0))
+        pygame.display.flip()
+        pygame.time.delay(2000)
+        self.game_state = "menu"
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -44,7 +49,6 @@ class Intro:
         try:
             frame = self.intro_frames[self.current_frame]
 
-            frame = np.flipud(frame)
             frame = np.fliplr(frame)
 
             x_offset = 0

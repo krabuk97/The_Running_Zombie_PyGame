@@ -6,11 +6,12 @@ from after_death import AfterDeath
 from level import Level
 from load_image import LoadImage
 from player import Player
-from weapons import Explosion, BombsManager, KineticWeapon, Rocket, SelectedBomb, Bombs
+from weapons import Explosion, KineticWeapon, Rocket, Bombs
 from health_pack import HealthPack
 from intro import Intro
 from zombie_friend import ZombieFriend
 from gui import Gui
+from bomb_manager import BombsManager, SelectedBomb
 
 
 width, height = 1080, 720
@@ -28,7 +29,7 @@ class GameLoop:
         self.kinetic_weapons_group = pygame.sprite.Group()
         self.weapons_group = pygame.sprite.Group()
         self.health_packs_group = pygame.sprite.Group()
-        self.health_pack_spawn_interval = 120000
+        self.health_pack_spawn_interval = 1
         self.health_pack_spawn_timer = 0
         pygame.display.set_caption("The Running Zombie")
         self.selected_bomb_type = "regular"
@@ -92,10 +93,6 @@ class GameLoop:
             selected_action = self.menu.handle_events()
             self.menu.draw()
             pygame.display.flip()
-
-            if selected_action == "exit":
-                pygame.quit()
-                sys.exit()
 
         self.game_loop()
 
@@ -245,6 +242,9 @@ class GameLoop:
         if self.should_change_level():
             self.load_level()
 
+        pygame.display.flip()
+        self.clock.tick(60)
+
     def load_level(self):
 
         self.current_level_number += 1
@@ -267,7 +267,7 @@ class GameLoop:
             self.background_changed = False
 
     def should_change_level(self):
-        return self.player.is_player_dead()
+        return self.player.is_dying
 
     def restart_game(self):
         self.background_changed = False
@@ -330,7 +330,7 @@ class GameLoop:
         self.health_packs_group.add(health_pack)
 
     def check_health_pack_spawn(self):
-        self.health_pack_spawn_timer += self.clock.tick(1800)
+        self.health_pack_spawn_timer += self.clock.tick(60)
         if self.health_pack_spawn_timer >= self.health_pack_spawn_interval:
             self.spawn_health_pack()
             self.health_pack_spawn_timer = 0

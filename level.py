@@ -1,5 +1,6 @@
 import pygame
-from player import Player, ZombieFriend
+from player import Player
+from zombie_friend import ZombieFriend
 
 width, height = 1080, 720
 screen = pygame.display.set_mode((width, height))

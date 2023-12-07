@@ -1,10 +1,13 @@
 import pygame
 import time
+from bomb_manager import SelectedBomb
 
 width, height = 1080, 720
 
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("The Running Zombie")
+
+bomb_types = ["rocket", "nuke", "regular", "frozen", "fire", "poison", "vork"]
 
 
 class Gui:
@@ -19,7 +22,7 @@ class Gui:
         self.bomb_button_positions = bomb_button_positions
         self.bomb_types = bomb_types
         self.selected_bomb_color = (255, 255, 255)
-        self.selected_bomb = None
+        self.selected_bomb = SelectedBomb()
         self.exit_button_image = pygame.transform.scale(
             pygame.image.load("image/exit_button.png").convert_alpha(), (50, 50)
         )
@@ -57,7 +60,6 @@ class Gui:
             bomb_image = pygame.image.load(image_path).convert_alpha()
             bomb_image = pygame.transform.scale(bomb_image, (50, 50))
 
-            # Ustaw kolor tylko dla wybranej bomby
             if self.selected_bomb == bomb_type:
                 bomb_image.fill((255, 255, 255, 128), special_flags=pygame.BLEND_RGBA_MULT)
 

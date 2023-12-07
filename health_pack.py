@@ -66,7 +66,7 @@ class HealthPack(pygame.sprite.Sprite):
 
         if self.has_changed_position:
             health_pack_position = (self.rect.x, self.rect.y)
-            self.player.set_targe
+            self.player.target_position
           
 first_health_pack = HealthPack(random.randint(50, width - 50), 0, health_packs_group)
 health_packs_group.add(first_health_pack)
