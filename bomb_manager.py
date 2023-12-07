@@ -4,7 +4,7 @@ from load_image import LoadImage
 from menu import Menu
 from player import Player 
 from zombie_friend import ZombieFriend
-from weapons import KineticWeapon, Rocket, Bombs, Explosion
+from weapons import KineticWeapon, Rocket, Bombs
 
 
 pygame.init()

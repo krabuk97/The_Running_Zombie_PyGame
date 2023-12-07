@@ -6,12 +6,14 @@ from after_death import AfterDeath
 from level import Level
 from load_image import LoadImage
 from player import Player
-from weapons import Explosion, KineticWeapon, Rocket, Bombs
+from weapons import KineticWeapon, Rocket, Bombs
+from explosion import Explosion
 from health_pack import HealthPack
 from intro import Intro
 from zombie_friend import ZombieFriend
 from gui import Gui
 from bomb_manager import BombsManager, SelectedBomb
+from load_screen import LoadScreen
 
 
 width, height = 1080, 720
@@ -33,6 +35,8 @@ class GameLoop:
         self.health_pack_spawn_timer = 0
         pygame.display.set_caption("The Running Zombie")
         self.selected_bomb_type = "regular"
+        self.game_state = "load_screen"
+        self.load_screen = LoadScreen()
         self.current_level_number = 1
         self.current_level = Level(self.current_level_number, "playing")
         self.start_x = 0
@@ -246,14 +250,18 @@ class GameLoop:
         self.clock.tick(60)
 
     def load_level(self):
+        self.game_state = "load_screen"
+        self.load_screen.show_load_screen(self.screen)
+        pygame.display.flip()
+        pygame.time.delay(2000)
 
         self.current_level_number += 1
         self.background_changed = False
         self.current_background_index = 0
-        self.update_background()
 
-        pygame.display.flip()
-        pygame.time.delay(2000)
+        self.current_level = Level(self.current_level_number, "playing")
+
+        self.game_state = "playing"
 
     def setup_zombie_friend(self):
         self.zombie_friend = ZombieFriend()
