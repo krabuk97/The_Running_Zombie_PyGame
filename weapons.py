@@ -32,7 +32,7 @@ menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit
 
 
 class Bombs(pygame.sprite.Sprite):
-    def __init__(self, player, bomb_type, mouse_position):
+    def __init__(self, player, zombie_friend, bomb_type, mouse_position):
         super().__init__()
 
         self.player = player
@@ -49,6 +49,7 @@ class Bombs(pygame.sprite.Sprite):
         x, y = self.mouse_position
         self.reset_bomb(start_x=x, start_y=0, speed=2)
         self.time_since_landing = 0
+        self.damage_amount = 0
 
     def load_bomb_image(self):
         if self.bomb_type == "nuke":
@@ -86,23 +87,24 @@ class Bombs(pygame.sprite.Sprite):
     def explode(self):
         explosion_type = "nuke" if self.bomb_type == "nuke" else "normal"
         from explosion import Explosion
-        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type)
+        explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type, damage_amount=self.damage_amount)
         explosion_group.add(explosion)
+        self.handle_explosion_collision()
 
         self.kill()
 
     def handle_explosion_collision(self):
-        player_collision = pygame.sprite.spritecollide(self, self.player, False)
+        player_collision = pygame.sprite.spritecollide(self, [self.player], False)
         if player_collision:
             for player in player_collision:
                 if player and not player.is_dying:
-                    player.take_damage()
+                    player.take_damage(self.damage_amount)
 
-        zombie_friend_collision = pygame.sprite.spritecollide(self, self.zombie_friend_group, False)
+        zombie_friend_collision = pygame.sprite.spritecollide(self, [self.zombie_friend], False)
         if zombie_friend_collision:
             for friend in zombie_friend_collision:
                 if friend and not friend.is_dying:
-                    friend.take_damage()
+                    friend.take_damage(self.damage_amount)
 
 
 class KineticWeapon(pygame.sprite.Sprite):

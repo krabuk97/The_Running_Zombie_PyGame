@@ -26,10 +26,11 @@ weapons_group = pygame.sprite.Group()
 class Explosion(pygame.sprite.Sprite):
     TARGET_SIZE = (150, 150)
 
-    def __init__(self, x, y, player, explosion_type):
+    def __init__(self, x, y, player, explosion_type, damage_amount=0):
         super().__init__()
 
         self.player = player
+        self.damage_amount = damage_amount
         self.all_sprites = all_sprites
         self.bombs_group = bombs_group
         self.kinetic_weapons_group = kinetic_weapons_group

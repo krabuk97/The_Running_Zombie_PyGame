@@ -1,5 +1,4 @@
 import pygame
-import random
 from menu import Menu
 from after_death import AfterDeath
 from level import Level
@@ -15,7 +14,6 @@ from load_screen import LoadScreen
 import pygame.mixer
 
 pygame.mixer.init()
-
 
 
 width, height = 1080, 720
@@ -112,9 +110,15 @@ class GameLoop:
 
             if self.player.score == 100:
                 self.death_screen()
+                self.restart_game()
 
             if self.should_change_level():
                 self.load_level()
+
+        self.player.update(self.camera_x, self.bombs_group, self.kinetic_weapons_group)
+        if self.zombie_friend:
+            self.zombie_friend.update(self.camera_x, self.bombs_group, self.kinetic_weapons_group)
+            self.all_sprites.add(self.zombie_friend)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -136,7 +140,7 @@ class GameLoop:
             new_bomb = KineticWeapon(self.player, self.all_sprites, self.weapons_group, mouse_x, mouse_y)
             self.bombs_group.add(new_bomb)
         else:
-            new_bomb = Bombs(self.player, self.selected_bomb_type, (mouse_x, mouse_y))
+            new_bomb = Bombs(self.player, self.zombie_friend, self.selected_bomb_type, (mouse_x, mouse_y))
             self.bombs_group.add(new_bomb)
 
     def handle_bomb_selection(self, key):
@@ -194,8 +198,6 @@ class GameLoop:
             self.current_level.update_background()
             self.background_changed = True
 
-        self.all_sprites.update(self.camera_x)
-
         self.bombs_group.update(self.camera_x)
 
         self.bombs_manager.update()
@@ -203,7 +205,7 @@ class GameLoop:
         self.handle_death()
 
         if self.zombie_friend:
-            self.zombie_friend.update(camera_x)
+            self.zombie_friend.update(camera_x, self.bombs_group, self.kinetic_weapons_group)
             self.all_sprites.add(self.zombie_friend)
 
         for bomb in self.bombs_group:
@@ -215,18 +217,21 @@ class GameLoop:
         for explosion in self.explosion_group:
             explosion.update(self.camera_x)
 
-        self.player.update(self.camera_x)
+        self.player.update(self.camera_x, self.bombs_group, self.kinetic_weapons_group)
 
-        if self.death_animation_started:
+        if self.player.is_dying and not self.death_animation_started:
+            self.death_animation_started = True
+            self.game_state = "death_animation"
+
+        if self.game_state == "death_animation":
             self.death_animation()
+        elif self.game_state == "playing":
+            pass
 
-        self.all_sprites.update(self.camera_x)
+        self.all_sprites.update(self.camera_x, self.bombs_group, self.kinetic_weapons_group)
         self.gui.draw_health_bar()
         self.gui.draw_point_score()
         self.all_sprites.draw(self.screen)
-
-        if self.player.score == 100:
-            self.death_screen()
 
         if self.should_change_level():
             self.load_level()
@@ -234,12 +239,7 @@ class GameLoop:
         pygame.display.flip()
         self.clock.tick(60)
 
-    def load_level(self):
-        self.game_state = "load_screen"
-        self.load_screen.show_load_screen(self.screen)
-        pygame.display.flip()
-        pygame.time.delay(2000)
-
+    def prepare_for_new_level(self):
         self.current_level_number += 1
         self.background_changed = False
         self.current_background_index = 0
@@ -247,12 +247,21 @@ class GameLoop:
         self.current_level = Level(self.current_level_number, "playing")
 
         self.game_state = "playing"
+        self.start_game()
+
+    def load_level(self):
+        self.game_state = "load_screen"
+        self.load_screen.show_load_screen(self.screen)
+        pygame.display.flip()
+        pygame.time.delay(2000)
+
+        self.prepare_for_new_level()
 
     def setup_zombie_friend(self):
         self.zombie_friend = ZombieFriend()
 
     def update_background(self):
-        if self.game_state == "death_screen" and not self.background_changed:
+        if self.player.health <= 0 and not self.background_changed:
             self.current_level.update_background()
             print(f"Changed background to {self.current_background_index}")
             self.background_changed = True
@@ -290,8 +299,8 @@ class GameLoop:
 
     def handle_death(self):
         if self.player.health <= 0 and not self.player.is_dying:
+            self.player_death_time = pygame.time.get_ticks()
             self.player.is_dying = True
-            self.time_of_death = pygame.time.get_ticks()
 
         if self.player.is_dying and not self.death_animation_started:
             self.death_animation_started = True

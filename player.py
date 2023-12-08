@@ -58,22 +58,68 @@ class Player(pygame.sprite.Sprite):
     def add_weapon(self, weapon):
         self.weapons.add(weapon)
 
-    def update(self, camera_x):
+    def take_damage(self, damage_amount):
+        self.health -= damage_amount
+        if self.health <= 0:
+            self.is_dying = True
+            self.animate_death()
+
+    def update(self, camera_x, bombs_group, kinetic_weapons_group):
         keys = pygame.key.get_pressed()
         any_key_pressed = any(keys)
 
         if not self.is_dying:
-            self.handle_movement()
-            self.handle_jumping()
+            if not any_key_pressed and not self.is_jumping:
+                self.avoid_dangers(bombs_group, kinetic_weapons_group)
+            else:
+                self.handle_movement()
+                self.handle_jumping()
+
             self.animate_idle() if not any_key_pressed and not self.is_jumping else self.animate()
 
         self.update_attributes()
         self.weapons.update(camera_x)
 
+    def avoid_dangers(self, bombs_group, kinetic_weapons_group):
+        nearest_danger = self.find_nearest_danger(bombs_group, kinetic_weapons_group)
+
+        if nearest_danger:
+            self.move_away_from_danger(nearest_danger)
+
+    def find_nearest_danger(self, *danger_groups):
+        nearest_danger = None
+        min_distance = float('inf')
+
+        for group in danger_groups:
+            for danger in group:
+                distance = math.sqrt((self.rect.centerx - danger.rect.centerx) ** 2 +
+                                     (self.rect.centery - danger.rect.centery) ** 2)
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_danger = danger
+
+        return nearest_danger
+
+    def move_away_from_danger(self, danger):
+        dx = danger.rect.centerx - self.rect.centerx
+        dy = danger.rect.centery - self.rect.centery
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+
+        if distance > 0:
+            dx /= distance
+            dy /= distance
+
+            new_x = self.rect.x - dx * self.speed
+            new_y = self.rect.y - dy * self.speed
+
+            self.rect.x = max(0, min(new_x, width - self.rect.width))
+            self.rect.y = max(0, min(new_y, height - self.rect.height))
+
     def set_target_position(self, position):
         self.target_position = position
 
     def handle_movement(self):
+        print(f"Target Position: {self.target_position}")
         if self.target_position:
             target_x, target_y = self.target_position
             dx = target_x - self.rect.x
@@ -84,6 +130,7 @@ class Player(pygame.sprite.Sprite):
             threshold_distance = 5
 
             if distance > threshold_distance:
+                print("Moving")
                 dx /= distance
                 dy /= distance
 
