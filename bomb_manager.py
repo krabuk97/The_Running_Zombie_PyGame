@@ -113,11 +113,6 @@ class BombsManager:
 
             self.is_bomb_selected = False
 
-        if self.zombie_friend:
-            zombie_hit = pygame.sprite.spritecollide(self.zombie_friend, self.bombs_group, False)
-            for bomb in zombie_hit:
-                bomb.handle_explosion_collision()
-
 
 class SelectedBomb:
     def __init__(self, bomb_type=None):
