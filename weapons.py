@@ -2,8 +2,7 @@ import random
 import pygame
 from load_image import LoadImage
 from menu import Menu
-from player import Player 
-from zombie_friend import ZombieFriend
+from player import Player
 import math
 
 
@@ -19,7 +18,6 @@ white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
 player = Player()
-zombie_friend = ZombieFriend()
 pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (width, height))
 death_screen = pygame.transform.scale(LoadImage.death_screen, (width, height))
@@ -32,11 +30,10 @@ menu = Menu(screen, LoadImage.menu_image, LoadImage.start_button, LoadImage.exit
 
 
 class Bombs(pygame.sprite.Sprite):
-    def __init__(self, player, zombie_friend, bomb_type, mouse_position):
+    def __init__(self, player, bomb_type, mouse_position):
         super().__init__()
 
         self.player = player
-        self.zombie_friend = zombie_friend
         self.bomb_type = bomb_type
         self.explosion_type = None
         self.exploded = False
@@ -99,12 +96,6 @@ class Bombs(pygame.sprite.Sprite):
             for player in player_collision:
                 if player and not player.is_dying:
                     player.take_damage(self.damage_amount)
-
-        zombie_friend_collision = pygame.sprite.spritecollide(self, [self.zombie_friend], False)
-        if zombie_friend_collision:
-            for friend in zombie_friend_collision:
-                if friend and not friend.is_dying:
-                    friend.take_damage(self.damage_amount)
 
 
 class KineticWeapon(pygame.sprite.Sprite):
@@ -173,7 +164,6 @@ class Rocket(pygame.sprite.Sprite):
         self.explosion_radius = 50
         self.radius = 20
         self.rect = self.image.get_rect(topleft=(x, y))
-        self.camera_x = 0
         self.target = None
         self.player = player
         self.all_sprites = all_sprites
@@ -188,13 +178,13 @@ class Rocket(pygame.sprite.Sprite):
 
         all_sprites.add(self)
         weapons_group.add(self)
-    
+
     def launch(self, player, start_x, start_y):
         self.rect.x, self.rect.y = start_x, start_y
         self.target = player.rect
         self.upward_velocity = -3
         self.launch_phase = 0
-    
+
     def rotate_towards_target(self, dx, dy, scale_factor=0.5):
         if self.launch_phase == 1:
             angle = math.atan2(dy, dx)
@@ -213,11 +203,11 @@ class Rocket(pygame.sprite.Sprite):
         explosion = Explosion(self.rect.centerx, self.rect.bottom, self.player, explosion_type="normal")
         self.all_sprites.add(explosion)
         self.weapons_group.remove(self)
-    
+
     def draw(self, screen, camera_x):
         screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
-    
-    def update(self, camera_x):
+
+    def update(self):
         if not self.target:
             return
 
@@ -230,7 +220,7 @@ class Rocket(pygame.sprite.Sprite):
             self.rect.y += self.upward_velocity
             if self.rect.y <= self.target.centery - self.upward_duration:
                 self.upward_velocity = 0
-                self.launch_phase = 1  
+                self.launch_phase = 1
                 self.rotate_towards_target(dx, dy)
 
         elif self.launch_phase == 1:

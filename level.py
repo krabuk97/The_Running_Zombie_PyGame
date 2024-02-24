@@ -1,6 +1,5 @@
 import pygame
 from player import Player
-from zombie_friend import ZombieFriend
 
 width, height = 1080, 720
 screen = pygame.display.set_mode((width, height))
@@ -24,10 +23,6 @@ class Level:
         self.current_background_index = 0
         self.current_background = self.background1
         self.background_changed = False
-        self.zombie_friend = ZombieFriend()
-        self.zombie_friend.set_target_position((width - 100, height - 100))
-        self.zombie_friend = None
-        self.friend_appeared = False
 
     def update_background(self):
         backgrounds = [self.background1, self.background2, self.background3, self.background4, self.background5,

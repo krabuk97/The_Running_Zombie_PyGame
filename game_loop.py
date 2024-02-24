@@ -1,4 +1,5 @@
 import pygame
+import math
 from menu import Menu
 from after_death import AfterDeath
 from level import Level
@@ -7,7 +8,6 @@ from player import Player
 from weapons import KineticWeapon, Rocket, Bombs
 from explosion import Explosion
 from intro import Intro
-from zombie_friend import ZombieFriend
 from gui import Gui
 from bomb_manager import BombsManager, SelectedBomb
 from load_screen import LoadScreen
@@ -39,8 +39,6 @@ class GameLoop:
         self.start_x = 0
         self.start_y = 0
         self.player = Player()
-        self.zombie_friend = ZombieFriend()
-        self.zombie_friend.rect.bottomright = (width - 10, height - 10)
         self.bomb_button_positions = [
             (1020, 50),
             (1020, 150),
@@ -70,7 +68,6 @@ class GameLoop:
         self.background_changed = False
         self.time_of_death = 0
         self.target_group = pygame.sprite.Group()
-        self.friend_appeared = False
         self.game_state = "intro"
         self.intro = Intro(self.screen, 'intro.mp4', "sounds\intro_sound.mp3")
         self.game_state = "menu"
@@ -80,7 +77,7 @@ class GameLoop:
         self.background_changed = False
         self.player = Player()
         self.all_sprites = pygame.sprite.Group()
-        self.all_sprites.add(self.player, self.zombie_friend)
+        self.all_sprites.add(self.player)
 
     def run(self):
         self.intro.play_intro()
@@ -115,11 +112,6 @@ class GameLoop:
             if self.should_change_level():
                 self.load_level()
 
-        self.player.update(self.camera_x, self.bombs_group, self.kinetic_weapons_group)
-        if self.zombie_friend:
-            self.zombie_friend.update(self.camera_x, self.bombs_group, self.kinetic_weapons_group)
-            self.all_sprites.add(self.zombie_friend)
-
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -140,7 +132,7 @@ class GameLoop:
             new_bomb = KineticWeapon(self.player, self.all_sprites, self.weapons_group, mouse_x, mouse_y)
             self.bombs_group.add(new_bomb)
         else:
-            new_bomb = Bombs(self.player, self.zombie_friend, self.selected_bomb_type, (mouse_x, mouse_y))
+            new_bomb = Bombs(self.player, self.selected_bomb_type, (mouse_x, mouse_y))
             self.bombs_group.add(new_bomb)
 
     def handle_bomb_selection(self, key):
@@ -178,8 +170,6 @@ class GameLoop:
 
         self.player.draw(self.screen)
 
-        if self.zombie_friend:
-            self.zombie_friend.draw(self.screen)
         self.gui.draw_point_score()
         self.gui.draw_bomb_buttons()
 
@@ -203,10 +193,6 @@ class GameLoop:
         self.bombs_manager.update()
 
         self.handle_death()
-
-        if self.zombie_friend:
-            self.zombie_friend.update(camera_x, self.bombs_group, self.kinetic_weapons_group)
-            self.all_sprites.add(self.zombie_friend)
 
         for bomb in self.bombs_group:
             bomb.update(self.camera_x)
@@ -257,9 +243,6 @@ class GameLoop:
 
         self.prepare_for_new_level()
 
-    def setup_zombie_friend(self):
-        self.zombie_friend = ZombieFriend()
-
     def update_background(self):
         if self.player.health <= 0 and not self.background_changed:
             self.current_level.update_background()
@@ -288,15 +271,6 @@ class GameLoop:
 
         self.background_changed = False
 
-    def draw_bombs(self):
-        for bomb in self.bombs_group:
-            bomb.update(self.camera_x)
-            if bomb.rect.colliderect(self.player.rect):
-                explosion = Explosion(bomb.rect.centerx, bomb.rect.bottom, self.player, bomb.bomb_type)
-                self.explosion_group.add(explosion)
-
-            self.screen.blit(bomb.image, (bomb.rect.x - self.camera_x, bomb.rect.y))
-
     def handle_death(self):
         if self.player.health <= 0 and not self.player.is_dying:
             self.player_death_time = pygame.time.get_ticks()
@@ -322,11 +296,9 @@ class GameLoop:
             pygame.display.flip()
             self.clock.tick(60)
 
-
-if __name__ == "__main__":
-    width, height = 1080, 720
-    game_loop = GameLoop(width, height)
-    game_loop.intro.play_intro()
-    player = Player()
-    game_loop.run()
+width, height = 1080, 720
+game_loop = GameLoop(width, height)
+game_loop.intro.play_intro()
+player = Player()
+game_loop.run()
     

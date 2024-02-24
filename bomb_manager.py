@@ -3,7 +3,6 @@ import pygame
 from load_image import LoadImage
 from menu import Menu
 from player import Player
-from zombie_friend import ZombieFriend
 from weapons import KineticWeapon, Rocket, Bombs
 
 pygame.init()
@@ -18,7 +17,6 @@ white = (255, 255, 255)
 red = (255, 0, 0)
 black = (0, 0, 0)
 player = Player()
-zombie_friend = ZombieFriend()
 pygame.display.set_icon(LoadImage.icon)
 background1 = pygame.transform.scale(LoadImage.background1, (width, height))
 death_screen = pygame.transform.scale(LoadImage.death_screen, (width, height))
@@ -37,7 +35,6 @@ class BombsManager:
         self.weapons_group = weapons_group
         self.bombs_group = bombs_group
         self.bomb_types = bomb_types
-        self.zombie_friend = zombie_friend
         self.selected_bomb = SelectedBomb(bomb_types)
         self.weapons_group = pygame.sprite.Group()
         self.kinetic_weapons_group = pygame.sprite.Group()
